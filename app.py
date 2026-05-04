@@ -1371,27 +1371,51 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
+import os
+import requests
+
 def enviar_email(destinatario, codigo):
-    """Apenas registra o código no terminal (sem tentar enviar e-mail real)"""
+    """Envia e-mail REAL usando API do SendGrid"""
     try:
-        # Mostra o código no terminal
-        print(f"\n{'='*60}")
-        print(f"📧 CÓDIGO DE RECUPERAÇÃO")
-        print(f"Para: {destinatario}")
-        print(f"Código: {codigo}")
-        print(f"Válido por: 5 minutos")
-        print(f"{'='*60}\n")
+        api_key = os.environ.get('SENDGRID_API_KEY')
         
-        # Salva em arquivo para referência
-        with open('codigos_recuperacao.txt', 'a') as f:
-            from datetime import datetime
-            f.write(f"{datetime.now()} - {destinatario}: {codigo}\n")
+        # Se não tiver API Key (modo desenvolvimento/local)
+        if not api_key:
+            print(f"\n📧 [MODO DEBUG] Código para {destinatario}: {codigo}")
+            return True
         
-        return True  # Retorna sucesso imediatamente
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
         
+        data = {
+            "personalizations": [
+                {"to": [{"email": destinatario}]}
+            ],
+            "from": {"email": "sarahfqueiroz2@gmail.com"},
+            "subject": "🔐 Código de Recuperação - IFPI",
+            "content": [
+                {
+                    "type": "text/plain",
+                    "value": f"Olá,\n\nSeu código de verificação é: {codigo}\n\nEste código é válido por 5 minutos.\n\nIFPI Campus Pedro II"
+                }
+            ]
+        }
+        
+        response = requests.post(url, json=data, headers=headers)
+        
+        if response.status_code == 202:
+            print(f"✅ E-mail enviado para {destinatario}")
+            return True
+        else:
+            print(f"❌ Erro ao enviar: {response.status_code} - {response.text}")
+            return False
+            
     except Exception as e:
-        print(f"Erro ao registrar código: {e}")
-        return True  # Mesmo com erro, retorna True para não travar o sistema
+        print(f"❌ Erro: {e}")
+        return False
 
 @app.route('/recuperar/enviar_codigo', methods=['POST'])
 def recuperar_enviar_codigo():
