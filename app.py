@@ -1,4 +1,6 @@
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import pymysql
@@ -52,30 +54,23 @@ DB_CONFIG = {
 }
 
 def get_db_connection():
-    # Verifica se está no Heroku (usando JAWSDB_URL)
-    if 'JAWSDB_URL' in os.environ:
-        import re
-        url = os.environ['JAWSDB_URL']
-        match = re.match(r'mysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', url)
-        if match:
-            return pymysql.connect(
-                host=match.group(3),
-                user=match.group(1),
-                password=match.group(2),
-                database=match.group(5),
-                charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor
-            )
-    # Conexão local (computador do professor)
-    return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='ifpi2026',
-        database='ifpi_aulas',
-        charset='utf8mb4',
-        cursorclass=pymysql.cursors.DictCursor
-    )
-
+    # Verifica se está no Render (usa DATABASE_URL do PostgreSQL)
+    if 'DATABASE_URL' in os.environ:
+        import psycopg2
+        from psycopg2.extras import RealDictCursor
+        url = os.environ['DATABASE_URL']
+        return psycopg2.connect(url, cursor_factory=RealDictCursor)
+    else:
+        # Conexão local com MySQL (computador do professor)
+        import pymysql
+        return pymysql.connect(
+            host='localhost',
+            user='root',
+            password='ifpi2026',
+            database='ifpi_aulas',
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
 # ================== FUNÇÕES AUXILIARES ==================
 
 def converter_timedelta_para_string(valor):
