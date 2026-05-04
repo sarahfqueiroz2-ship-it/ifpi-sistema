@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Registro - IFPI Campus Pedro II</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --verde-principal: #2d8659;
+            --verde-escuro: #1a5438;
+            --branco: #ffffff;
+            --cinza-bg: #fafbfc;
+            --cinza-medio: #f5f6f7;
+            --cinza-borda: #e1e4e8;
+            --cinza-texto: #24292e;
+            --cinza-secundario: #586069;
+            --vermelho: #d73a49;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--cinza-bg);
+            color: var(--cinza-texto);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--branco);
+            border-right: 1px solid var(--cinza-borda);
+            padding: 24px 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .logo-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .nav-menu {
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            color: var(--cinza-secundario);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .nav-item.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            left: 260px;
+            right: 0;
+            top: 0;
+            height: 64px;
+            background-color: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 90;
+            transition: left 0.3s ease;
+        }
+
+        /* Botão Menu */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 16px;
+        }
+
+        .menu-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cinza-texto);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--verde-principal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 64px;
+            padding: 32px;
+            min-height: calc(100vh - 64px);
+            transition: margin-left 0.3s ease;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--cinza-secundario);
+            margin-bottom: 24px;
+        }
+
+        .breadcrumb a {
+            color: var(--verde-principal);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cinza-texto);
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            font-size: 14px;
+            color: var(--cinza-secundario);
+        }
+
+        /* Form Card */
+        .form-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--cinza-texto);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: ' *';
+            color: var(--vermelho);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: var(--cinza-texto);
+            background-color: var(--branco);
+            transition: all 0.2s;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--verde-principal);
+            box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--cinza-secundario);
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        /* Radio Buttons */
+        .radio-group {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--verde-principal);
+        }
+
+        .radio-item label {
+            font-size: 14px;
+            color: var(--cinza-texto);
+            cursor: pointer;
+        }
+
+        /* Checkbox Group */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--verde-principal);
+        }
+
+        .checkbox-item label {
+            font-size: 14px;
+            color: var(--cinza-texto);
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 24px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-escuro);
+        }
+
+        .btn-secondary {
+            background-color: var(--branco);
+            color: var(--cinza-texto);
+            border: 1px solid var(--cinza-borda);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--cinza-medio);
+        }
+
+        /* Helper Text */
+        .helper-text {
+            font-size: 12px;
+            color: var(--cinza-secundario);
+            margin-top: 4px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-box-icon {
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+
+        .info-box-text {
+            font-size: 14px;
+            color: var(--cinza-texto);
+            line-height: 1.5;
+        }
+
+        .logout-section {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--vermelho);
+            background-color: transparent;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background-color: #fee;
+            color: #b91c1c;
+        }
+
+        .logout-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .header {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .header-title {
+                flex: 1;
+            }
+            .form-card {
+                padding: 20px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <img src="logo-aside.png" alt="IFPI Campus Pedro II">
+        </div>
+
+<nav class="nav-menu" id="navMenu"></nav>
+
+    </aside>
+
+<header class="header">
+    <button class="menu-toggle" id="menuToggle">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+        </svg>
+    </button>
+    <div class="header-title">Novo Registro</div>
+    <div class="user-section">
+        <div class="user-info">
+            <span class="user-name" id="userNameDisplay">Carregando...</span>
+            <span class="user-role" id="userRoleDisplay"></span>
+        </div>
+        <div class="user-avatar" id="userAvatarDisplay">--</div>
+    </div>
+</header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="pagina-inicial.html">Dashboard</a>
+                <span>/</span>
+                <span>Novo Registro</span>
+            </div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Registrar Atividade</h1>
+                <p class="page-description">Preencha os dados para registrar uma antecipação, reposição ou ausência</p>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <div class="info-box-icon">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="info-box-text">
+                    <strong>Importante:</strong> O tipo de professor (Base Comum ou Disciplinas Técnicas) será automaticamente identificado com base no curso selecionado e seu cadastro no sistema.
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="registroForm">
+                <!-- Seção 1: Informações Básicas -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Informações Básicas</h2>
+
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label class="form-label required">Tipo de Registro</label>
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <input type="radio" id="antecipacao" name="registro" value="antecipacao" required>
+                                <label for="antecipacao">Antecipação</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="reposicao" name="registro" value="reposicao">
+                                <label for="reposicao">Reposição</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="ausencia" name="registro" value="ausencia">
+                                <label for="ausencia">Ausência</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="data" class="form-label required">Data</label>
+                            <input type="date" id="data" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantidade" class="form-label required">Quantidade de Aulas</label>
+                            <select id="quantidade" class="form-select" required>
+                                <option value="">Selecione</option>
+                                <option value="1">1 aula</option>
+                                <option value="2">2 aulas</option>
+                                <option value="3">3 aulas</option>
+                                <option value="4">4 aulas</option>
+                                <option value="5">5 aulas</option>
+                                <option value="6">6 aulas</option>
+                                <option value="7">7 aulas</option>
+                                <option value="8">8 aulas</option>
+                                <option value="9">9 aulas</option>
+                                <option value="10">10 aulas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 1.5: Seleção de Professor -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Professor Responsável</h2>
+                    <div class="form-grid full">
+                        <div class="form-group">
+                            <label for="professorSelecionado" class="form-label required">Selecione o Professor</label>
+                            <select id="professorSelecionado" class="form-select" required>
+                                <option value="">Carregando...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 2: Curso e Turma -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Curso e Turma</h2>
+
+                    <div class="form-grid full">
+                        <div class="form-group">
+                            <label for="curso" class="form-label required">Curso</label>
+                            <select id="curso" class="form-select" required>
+                                <option value="">Selecione o curso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="serie" class="form-label required">Série/Módulo</label>
+                            <select id="serie" class="form-select" required>
+                                <option value="">Selecione a série/módulo</option>
+                                <optgroup label="Ensino Integrado">
+                                    <option value="1-ano-integrado">1º Ano do Integrado</option>
+                                    <option value="2-ano-integrado">2º Ano do Integrado</option>
+                                    <option value="3-ano-integrado">3º Ano do Integrado</option>
+                                </optgroup>
+                                <optgroup label="PROEJA">
+                                    <option value="1-ano-proeja">1º Ano PROEJA</option>
+                                    <option value="2-ano-proeja">2º Ano PROEJA</option>
+                                    <option value="3-ano-proeja">3º Ano PROEJA</option>
+                                </optgroup>
+                                <optgroup label="Subsequente">
+                                    <option value="1-modulo-subsequente">1º Módulo Subsequente</option>
+                                    <option value="2-modulo-subsequente">2º Módulo Subsequente</option>
+                                </optgroup>
+                                <optgroup label="Superior">
+                                    <option value="1-modulo-superior">1º Módulo do Superior</option>
+                                    <option value="2-modulo-superior">2º Módulo do Superior</option>
+                                    <option value="3-modulo-superior">3º Módulo do Superior</option>
+                                    <option value="4-modulo-superior">4º Módulo do Superior</option>
+                                    <option value="5-modulo-superior">5º Módulo do Superior</option>
+                                    <option value="6-modulo-superior">6º Módulo do Superior</option>
+                                    <option value="7-modulo-superior">7º Módulo do Superior</option>
+                                    <option value="8-modulo-superior">8º Módulo do Superior</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Professor</label>
+                            <input type="text" id="tipoProfessor" class="form-input" value="Será definido automaticamente" readonly style="background-color: var(--cinza-medio);">
+                            <span class="helper-text">Detectado automaticamente com base no curso</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 3: Horários -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Horários</h2>
+                    <div class="form-group">
+                        <label class="form-label required">Selecione o(s) horário(s)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h1m" name="horarios" value="07:00 - 08:00">
+                                <label for="h1m">1º horário - 07:00 às 08:00 (Manhã)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h2m" name="horarios" value="08:00 - 09:00">
+                                <label for="h2m">2º horário - 08:00 às 09:00 (Manhã)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h3m" name="horarios" value="09:00 - 10:00">
+                                <label for="h3m">3º horário - 09:00 às 10:00 (Manhã)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h4m" name="horarios" value="10:20 - 11:20">
+                                <label for="h4m">4º horário - 10:20 às 11:20 (Manhã)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h5m" name="horarios" value="11:20 - 12:20">
+                                <label for="h5m">5º horário - 11:20 às 12:20 (Manhã)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h1t" name="horarios" value="13:00 - 14:00">
+                                <label for="h1t">1º horário - 13:00 às 14:00 (Tarde)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h2t" name="horarios" value="14:00 - 15:00">
+                                <label for="h2t">2º horário - 14:00 às 15:00 (Tarde)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h3t" name="horarios" value="15:00 - 16:00">
+                                <label for="h3t">3º horário - 15:00 às 16:00 (Tarde)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h4t" name="horarios" value="16:00 - 17:00">
+                                <label for="h4t">4º horário - 16:00 às 17:00 (Tarde)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h5t" name="horarios" value="17:00 - 18:00">
+                                <label for="h5t">5º horário - 17:00 às 18:00 (Tarde)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h1n" name="horarios" value="18:00 - 19:00">
+                                <label for="h1n">1º horário - 18:00 às 19:00 (Noite)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h2n" name="horarios" value="19:00 - 20:00">
+                                <label for="h2n">2º horário - 19:00 às 20:00 (Noite)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h3n" name="horarios" value="20:00 - 21:00">
+                                <label for="h3n">3º horário - 20:00 às 21:00 (Noite)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h4n" name="horarios" value="21:00 - 22:00">
+                                <label for="h4n">4º horário - 21:00 às 22:00 (Noite)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 4: Disciplina e Observações -->
+                <div class="form-card">
+                    <h2 class="form-section-title">Disciplina e Observações</h2>
+                    <div class="form-grid full">
+                        <div class="form-group">
+                            <label for="disciplina" class="form-label required">Disciplina do Professor(a)</label>
+                            <input type="text" id="disciplina" class="form-input" placeholder="Ex: Matemática, Programação Web, etc." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="observacoes" class="form-label">Observações (opcional)</label>
+                            <textarea id="observacoes" class="form-textarea" placeholder="Adicione informações adicionais sobre este registro..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-card">
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="cancelar()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Registro</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+
+<script>
+    const API = 'http://10.14.3.69:8080';
+    let user = null;
+
+    // Menu Toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    function closeMenu() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', toggleMenu);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', closeMenu);
+    }
+    document.querySelectorAll('.nav-item').forEach(link => {
+        link.addEventListener('click', closeMenu);
+    });
+
+    function detectarTipoProfessor(disciplina) {
+        if (!disciplina || disciplina.trim() === '') return 'Digite a disciplina';
+        const disc = disciplina.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const materiasBaseComum = [
+            'matematica', 'portugues', 'geografia', 'historia', 'sociologia',
+            'filosofia', 'fisica', 'quimica', 'biologia', 'educacao fisica',
+            'ed fisica', 'artes', 'ingles', 'espanhol', 'literatura', 'redacao',
+            'gramatica', 'algebra', 'geometria', 'trigonometria', 'lingua portuguesa',
+            'lingua inglesa', 'lingua espanhola', 'educacao artistica'
+        ];
+        for (let materia of materiasBaseComum) {
+            if (disc.includes(materia)) return 'Base Comum';
+        }
+        return 'Técnico';
+    }
+
+    async function carregarCursos() {
+        try {
+            const response = await fetch(`${API}/cursos`);
+            const data = await response.json();
+            const select = document.getElementById('curso');
+            if (select) {
+                select.innerHTML = '<option value="">Selecione um curso</option>';
+                if (data.cursos) {
+                    data.cursos.forEach(curso => {
+                        select.innerHTML += `<option value="${curso.id}">${curso.nome}</option>`;
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar cursos:', error);
+            alert('Erro ao carregar cursos. Verifique se o servidor está rodando.');
+        }
+    }
+
+    async function carregarProfessores() {
+        try {
+            const response = await fetch(`${API}/professores_lista`);
+            const data = await response.json();
+            const select = document.getElementById('professorSelecionado');
+            if (select) {
+                select.innerHTML = '<option value="">Selecione um professor</option>';
+                if (data.professores) {
+                    data.professores.forEach(prof => {
+                        select.innerHTML += `<option value="${prof.id}">${prof.nome}</option>`;
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar professores:', error);
+            alert('Erro ao carregar lista de professores.');
+        }
+    }
+
+    function cancelar() {
+        window.location.href = 'pagina-inicial.html';
+    }
+
+    // ================== FUNÇÕES DE MENU ==================
+    function gerarMenu() {
+        const userData = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+        const tipo = userData ? userData.tipo : null;
+
+        if (tipo === 'professor') {
+            window.location.href = 'calendario_professor.html';
+            return;
+        }
+
+        const navMenu = document.getElementById('navMenu');
+        if (!navMenu) return;
+
+        let links = [
+            { href: 'pagina-inicial.html', icon: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z', text: 'Dashboard' },
+            { href: 'formulario.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Novo Registro' },
+            { href: 'historico-de-registro.html', icon: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Histórico' },
+            { href: 'pagina-administrativa.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Controle de Aulas' }
+        ];
+
+        if (tipo === 'coordenador') {
+            links.push({ href: 'calendario_professor.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Calendário' });
+        }
+
+        if (tipo === 'admin') {
+            links.push({ href: 'admin_usuarios.html', icon: 'M12 4a4 4 0 10-8 0 4 4 0 008 0zm-4 6a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zm7 0a3 3 0 00-3 3v1h6v-1a3 3 0 00-3-3z', text: 'Gerenciar Usuários' });
+        }
+
+        let html = '';
+        links.forEach(link => {
+            const isActive = window.location.pathname.includes(link.href.replace('.html', ''));
+            const activeClass = isActive ? 'active' : '';
+            html += `
+                <a href="${link.href}" class="nav-item ${activeClass}">
+                    <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="${link.icon}"/>
+                    </svg>
+                    ${link.text}
+                </a>
+            `;
+        });
+
+        html += `
+            <div class="logout-section">
+                <a href="javascript:void(0)" onclick="logout()" class="btn-logout">
+                    <svg class="logout-icon" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                    </svg>
+                    Sair do Sistema
+                </a>
+            </div>
+        `;
+
+        navMenu.innerHTML = html;
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+
+    // ================== INICIALIZAÇÃO ==================
+    document.addEventListener('DOMContentLoaded', function() {
+        gerarMenu();
+
+        user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // ATUALIZAR HEADER
+        document.getElementById('userNameDisplay').textContent = user.nome;
+        const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+        document.getElementById('userAvatarDisplay').textContent = iniciais;
+
+        let roleText = '';
+        if (user.tipo === 'admin') roleText = 'Administrador';
+        else if (user.tipo === 'coordenador') roleText = 'Coordenador';
+        else if (user.tipo === 'tecnico_administrativo') roleText = 'Técnico Administrativo';
+        else if (user.tipo === 'professor') roleText = 'Professor';
+        else roleText = 'Usuário';
+        document.getElementById('userRoleDisplay').textContent = roleText;
+
+        if (user.tipo !== 'admin' && user.tipo !== 'coordenador' && user.tipo !== 'tecnico_administrativo') {
+            alert('Acesso negado. Você não tem permissão para acessar esta página.');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        console.log('Usuário logado:', user);
+        console.log('Tipo do usuário:', user.tipo);
+
+        // Setar data atual
+        const dataInput = document.getElementById('data');
+        if (dataInput) {
+            dataInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        carregarCursos();
+        carregarProfessores();
+
+        // Detectar tipo de professor
+        const disciplinaInput = document.getElementById('disciplina');
+        const tipoProfessorInput = document.getElementById('tipoProfessor');
+
+        if (disciplinaInput && tipoProfessorInput) {
+            disciplinaInput.addEventListener('input', function(e) {
+                tipoProfessorInput.value = detectarTipoProfessor(e.target.value);
+            });
+            disciplinaInput.addEventListener('blur', function(e) {
+                tipoProfessorInput.value = detectarTipoProfessor(e.target.value);
+            });
+        }
+
+        // Submissão do formulário
+        const registroForm = document.getElementById('registroForm');
+        if (registroForm) {
+            registroForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const tipoRegistro = document.querySelector('input[name="registro"]:checked');
+                if (!tipoRegistro) {
+                    alert('Selecione o tipo de registro');
+                    return;
+                }
+
+                const professorId = document.getElementById('professorSelecionado').value;
+                if (!professorId) {
+                    alert('Selecione um professor');
+                    return;
+                }
+
+                const cursoId = document.getElementById('curso').value;
+                if (!cursoId) {
+                    alert('Selecione um curso');
+                    return;
+                }
+
+                const serie = document.getElementById('serie').value;
+                if (!serie) {
+                    alert('Selecione a série/módulo');
+                    return;
+                }
+
+                const quantidade = document.getElementById('quantidade').value;
+                if (!quantidade) {
+                    alert('Selecione a quantidade de aulas');
+                    return;
+                }
+
+                const horariosSelecionados = document.querySelectorAll('input[name="horarios"]:checked');
+                if (horariosSelecionados.length === 0) {
+                    alert('Selecione pelo menos um horário');
+                    return;
+                }
+
+                const disciplina = document.getElementById('disciplina').value;
+                if (!disciplina.trim()) {
+                    alert('Digite a disciplina');
+                    return;
+                }
+
+                const data = document.getElementById('data').value;
+                const observacoes = document.getElementById('observacoes').value;
+                const tipoProfessor = document.getElementById('tipoProfessor').value;
+
+                // PEGAR TODOS OS HORÁRIOS
+                const horariosLista = Array.from(horariosSelecionados).map(cb => cb.value);
+
+                const payload = {
+                    professor_id: parseInt(professorId),
+                    data: data,
+                    tipo: tipoRegistro.value,
+                    curso_id: parseInt(cursoId),
+                    serie: serie,
+                    quantidade: parseInt(quantidade),
+                    horarios: horariosLista,
+                    disciplina: disciplina,
+                    observacoes: observacoes,
+                    tipo_professor: tipoProfessor
+                };
+
+                console.log('Enviando dados:', payload);
+
+                try {
+                    const response = await fetch(`${API}/registros`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Registro salvo com sucesso!');
+                        window.location.href = 'historico-de-registro.html';
+                    } else {
+                        alert('Erro ao salvar registro: ' + (result.message || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro ao conectar com o servidor');
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

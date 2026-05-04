@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários - IFPI Campus Pedro II</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --verde-principal: #2d8659;
+            --verde-escuro: #1a5438;
+            --branco: #ffffff;
+            --cinza-bg: #fafbfc;
+            --cinza-medio: #f5f6f7;
+            --cinza-borda: #e1e4e8;
+            --cinza-texto: #24292e;
+            --cinza-secundario: #586069;
+            --vermelho: #d73a49;
+            --azul: #0366d6;
+            --amarelo: #f9c74f;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cinza-bg);
+            color: var(--cinza-texto);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--branco);
+            border-right: 1px solid var(--cinza-borda);
+            padding: 24px 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .logo-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+        }
+
+        .nav-menu {
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            color: var(--cinza-secundario);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .nav-item.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            left: 260px;
+            right: 0;
+            top: 0;
+            height: 64px;
+            background-color: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 90;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 16px;
+        }
+
+        .menu-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cinza-texto);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            display: block;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--cinza-secundario);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--verde-principal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 64px;
+            padding: 32px;
+            min-height: calc(100vh - 64px);
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cinza-texto);
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background-color: var(--verde-principal);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-escuro);
+        }
+
+        /* Table */
+        .table-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: var(--cinza-medio);
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cinza-secundario);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 16px 24px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.admin { background-color: #d1ecf1; color: #0c5460; }
+        .badge.coordenador { background-color: #fff3cd; color: #856404; }
+        .badge.tecnico_administrativo { background-color: #d4edda; color: #155724; }
+        .badge.professor { background-color: #e2d9f3; color: #4a1d6d; }
+
+        .btn-icon {
+            padding: 6px 12px;
+            margin: 0 4px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .btn-icon.edit:hover { background-color: var(--azul); color: white; border-color: var(--azul); }
+        .btn-icon.delete:hover { background-color: var(--vermelho); color: white; border-color: var(--vermelho); }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: var(--cinza-texto);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--cinza-texto);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--verde-principal);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancelar {
+            padding: 10px 20px;
+            background: var(--cinza-medio);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-salvar {
+            padding: 10px 20px;
+            background: var(--verde-principal);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-section {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--vermelho);
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover {
+            background-color: #fee;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--cinza-secundario);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .header {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: flex;
+            }
+            .table-container {
+                overflow-x: scroll;
+            }
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <img src="logo-aside.png" alt="IFPI Campus Pedro II">
+        </div>
+        <nav class="nav-menu" id="navMenu"></nav>
+    </aside>
+
+    <header class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+        <div class="header-title">Gerenciar Usuários</div>
+        <div class="user-section">
+            <div class="user-info">
+                <span class="user-name" id="userNameDisplay">Carregando...</span>
+                <span class="user-role" id="userRoleDisplay"></span>
+            </div>
+            <div class="user-avatar" id="userAvatarDisplay">--</div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Gerenciar Usuários</h1>
+                <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Usuário</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">Usuários do Sistema</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuário</th>
+                                <th>Nome Completo</th>
+                                <th>Tipo</th>
+                                <th>Disciplina</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaUsuarios">
+                            <tr><td colspan="6" class="loading">Carregando...</td><\/tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Novo/Editar -->
+    <div class="modal" id="modalUsuario">
+        <div class="modal-content">
+            <h3 id="modalTitulo">Novo Usuário</h3>
+            <form id="formUsuario">
+                <input type="hidden" id="usuarioId">
+                <div class="form-group">
+                    <label>Usuário (login)</label>
+                    <input type="text" id="usuario" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha <span id="senhaOpcional" style="font-size: 12px; color: var(--cinza-secundario);">(deixe em branco para manter a mesma)</span></label>
+                    <input type="password" id="senha">
+                </div>
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="nomeCompleto" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Usuário</label>
+                    <select id="tipo" required>
+                        <option value="professor">Professor</option>
+                        <option value="coordenador">Coordenador</option>
+                        <option value="tecnico_administrativo">Técnico Administrativo</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group" id="campoDisciplina" style="display:none;">
+                    <label>Disciplina (apenas para Professor)</label>
+                    <input type="text" id="disciplina" placeholder="Ex: Matemática, Programação...">
+                </div>
+                <div class="form-group" id="campoProfessorTipo" style="display:none;">
+                    <label>Tipo do Professor</label>
+                    <select id="professorTipo">
+                        <option value="Base Comum">Base Comum</option>
+                        <option value="Técnico">Técnico</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://10.14.3.69:8080';
+        let user = null;
+        let usuarios = [];
+
+        // Menu Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMenu() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // Gerar menu dinâmico
+        function gerarMenu() {
+            const navMenu = document.getElementById('navMenu');
+            if (!navMenu) return;
+            
+            const userLogado = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            const tipo = userLogado ? userLogado.tipo : null;
+            
+            let links = [
+                { href: 'pagina-inicial.html', icon: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z', text: 'Dashboard' },
+                { href: 'formulario.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Novo Registro' },
+                { href: 'historico-de-registro.html', icon: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Histórico' },
+                { href: 'pagina-administrativa.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Controle de Aulas' }
+            ];
+            
+            if (tipo === 'admin') {
+                links.push({ href: 'admin_usuarios.html', icon: 'M12 4a4 4 0 10-8 0 4 4 0 008 0zm-4 6a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zm7 0a3 3 0 00-3 3v1h6v-1a3 3 0 00-3-3z', text: 'Gerenciar Usuários' });
+            }
+            
+            let html = '';
+            links.forEach(link => {
+                const isActive = window.location.pathname.includes(link.href.replace('.html', ''));
+                const activeClass = isActive ? 'active' : '';
+                html += `
+                    <a href="${link.href}" class="nav-item ${activeClass}">
+                        <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="${link.icon}"/>
+                        </svg>
+                        ${link.text}
+                    </a>
+                `;
+            });
+            
+            html += `
+                <div class="logout-section">
+                    <a href="javascript:void(0)" onclick="logout()" class="btn-logout">
+                        <svg class="logout-icon" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                        </svg>
+                        Sair do Sistema
+                    </a>
+                </div>
+            `;
+            
+            navMenu.innerHTML = html;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Carregar usuários
+        async function carregarUsuarios() {
+            try {
+                const response = await fetch(`${API}/admin/usuarios`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    usuarios = data.usuarios;
+                    renderizarTabela();
+                } else {
+                    console.error('Erro ao carregar usuários:', data.message);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabelaUsuarios');
+            if (!tbody) return;
+            
+            if (usuarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">Nenhum usuário encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            usuarios.forEach(usuario => {
+                const tipoClass = usuario.tipo === 'admin' ? 'admin' : 
+                                 usuario.tipo === 'coordenador' ? 'coordenador' : 
+                                 usuario.tipo === 'tecnico_administrativo' ? 'tecnico_administrativo' : 'professor';
+                
+                const tipoDisplay = usuario.tipo === 'tecnico_administrativo' ? 'Técnico Administrativo' :
+                                   usuario.tipo === 'coordenador' ? 'Coordenador' :
+                                   usuario.tipo === 'admin' ? 'Administrador' : 'Professor';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${usuario.id}</td>
+                    <td>${usuario.usuario}</td>
+                    <td>${usuario.nome_completo}</td>
+                    <td><span class="badge ${tipoClass}">${tipoDisplay}</span></td>
+                    <td>${usuario.disciplina || '-'}</td>
+                    <td>
+                        <button class="btn-icon edit" onclick="editarUsuario(${usuario.id})">Editar</button>
+                        <button class="btn-icon delete" onclick="excluirUsuario(${usuario.id})">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Mostrar/Esconder campos de professor
+        function toggleCamposProfessor() {
+            const tipo = document.getElementById('tipo').value;
+            const campoDisciplina = document.getElementById('campoDisciplina');
+            const campoProfessorTipo = document.getElementById('campoProfessorTipo');
+            
+            if (tipo === 'professor') {
+                campoDisciplina.style.display = 'block';
+                campoProfessorTipo.style.display = 'block';
+            } else {
+                campoDisciplina.style.display = 'none';
+                campoProfessorTipo.style.display = 'none';
+            }
+        }
+
+        document.getElementById('tipo')?.addEventListener('change', toggleCamposProfessor);
+
+        function abrirModalNovo() {
+            document.getElementById('modalTitulo').textContent = 'Novo Usuário';
+            document.getElementById('formUsuario').reset();
+            document.getElementById('usuarioId').value = '';
+            document.getElementById('senha').required = true;
+            document.getElementById('senhaOpcional').style.display = 'none';
+            toggleCamposProfessor();
+            document.getElementById('modalUsuario').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modalUsuario').style.display = 'none';
+        }
+
+        async function editarUsuario(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            if (!usuario) return;
+            
+            document.getElementById('modalTitulo').textContent = 'Editar Usuário';
+            document.getElementById('usuarioId').value = usuario.id;
+            document.getElementById('usuario').value = usuario.usuario;
+            document.getElementById('nomeCompleto').value = usuario.nome_completo;
+            document.getElementById('tipo').value = usuario.tipo;
+            document.getElementById('disciplina').value = usuario.disciplina || '';
+            document.getElementById('professorTipo').value = usuario.professor_tipo || 'Base Comum';
+            document.getElementById('senha').value = '';
+            document.getElementById('senha').required = false;
+            document.getElementById('senhaOpcional').style.display = 'inline';
+            toggleCamposProfessor();
+            document.getElementById('modalUsuario').style.display = 'flex';
+        }
+
+        async function excluirUsuario(id) {
+            if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+            
+            try {
+                const response = await fetch(`${API}/admin/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Usuário excluído com sucesso!');
+                    carregarUsuarios();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao excluir usuário');
+            }
+        }
+
+        document.getElementById('formUsuario')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('usuarioId').value;
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+            const nomeCompleto = document.getElementById('nomeCompleto').value;
+            const tipo = document.getElementById('tipo').value;
+            const disciplina = document.getElementById('disciplina').value;
+            const professorTipo = document.getElementById('professorTipo').value;
+            
+            const payload = {
+                usuario,
+                nome_completo: nomeCompleto,
+                tipo,
+                disciplina,
+                professor_tipo: professorTipo
+            };
+            
+            if (senha) payload.senha = senha;
+            
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API}/admin/usuarios/${id}` : `${API}/admin/usuarios`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(id ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
+                    fecharModal();
+                    carregarUsuarios();
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar usuário');
+            }
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            if (user.tipo !== 'admin') {
+                alert('Acesso negado. Apenas administradores podem acessar esta página.');
+                window.location.href = 'pagina-inicial.html';
+                return;
+            }
+            
+            document.getElementById('userNameDisplay').textContent = user.nome;
+            const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+            document.getElementById('userAvatarDisplay').textContent = iniciais;
+            document.getElementById('userRoleDisplay').textContent = 'Administrador';
+            
+            gerarMenu();
+            carregarUsuarios();
+        });
+        
+        window.fecharModal = fecharModal;
+        window.abrirModalNovo = abrirModalNovo;
+        window.editarUsuario = editarUsuario;
+        window.excluirUsuario = excluirUsuario;
+        window.logout = logout;
+    </script>
+</body>
+</html>

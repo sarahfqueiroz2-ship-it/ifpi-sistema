@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - IFPI Campus Pedro II</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --verde-principal: #2d8659;
+            --verde-escuro: #1a5438;
+            --branco: #ffffff;
+            --cinza-bg: #fafbfc;
+            --cinza-medio: #f5f6f7;
+            --cinza-borda: #e1e4e8;
+            --cinza-texto: #24292e;
+            --cinza-secundario: #586069;
+            --vermelho: #d73a49;
+            --amarelo: #f9c74f;
+            --azul: #0366d6;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--cinza-bg);
+            color: var(--cinza-texto);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--branco);
+            border-right: 1px solid var(--cinza-borda);
+            padding: 24px 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        /* Overlay para mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .logo-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .nav-menu {
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            color: var(--cinza-secundario);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .nav-item.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            left: 260px;
+            right: 0;
+            top: 0;
+            height: 64px;
+            background-color: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 90;
+            transition: left 0.3s ease;
+        }
+
+        /* Botão Menu Hambúrguer */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 16px;
+        }
+
+        .menu-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cinza-texto);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            display: block;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--cinza-secundario);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--verde-principal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 64px;
+            padding: 32px;
+            min-height: calc(100vh - 64px);
+            transition: margin-left 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--cinza-secundario);
+            margin-bottom: 5px;
+        }
+
+        .filter-select, .filter-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--verde-principal);
+        }
+
+        .btn-primary {
+            padding: 8px 20px;
+            background-color: var(--verde-principal);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-escuro);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 20px;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--cinza-borda);
+            flex-shrink: 0;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--cinza-secundario);
+            margin-top: 2px;
+        }
+
+        .chart-card canvas {
+            flex: 1;
+            width: 100% !important;
+            max-height: 250px !important;
+            min-height: 200px;
+        }
+
+        /* Checkbox Group */
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            padding-top: 15px;
+            margin-top: 15px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--verde-principal);
+        }
+
+        .checkbox-item label {
+            font-size: 13px;
+            color: var(--cinza-texto);
+            cursor: pointer;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.reposicao {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge.antecipacao {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.ausencia {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .logout-section {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--vermelho);
+            background-color: transparent;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background-color: #fee;
+            color: #b91c1c;
+        }
+
+        .logout-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .header {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .header-title {
+                flex: 1;
+            }
+            .filters-row {
+                flex-direction: column;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .btn-primary {
+                width: 100%;
+            }
+            .checkbox-group {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <img src="logo-aside.png" alt="IFPI Campus Pedro II">
+        </div>
+
+<nav class="nav-menu" id="navMenu"></nav>
+
+    </aside>
+
+    <!-- Header -->
+    <header class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+        <div class="header-title">Painel de Controle</div>
+        <div class="user-section">
+            <div class="user-info">
+                <span class="user-name" id="userNameDisplay">João Silva</span>
+                <span class="user-role" id="userRoleDisplay">Professor</span>
+            </div>
+            <div class="user-avatar" id="userAvatarDisplay">JS</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Filtros -->
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Data Inicial</label>
+                        <input type="date" id="dataInicio" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Data Final</label>
+                        <input type="date" id="dataFim" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Professor</label>
+                        <select id="filtroProfessor" class="filter-select">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Disciplina</label>
+                        <input type="text" id="filtroDisciplina" class="filter-input" placeholder="Digite a disciplina">
+                    </div>
+                    <div>
+                        <button id="btnAtualizar" class="btn-primary">Atualizar</button>
+                    </div>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="mostrarReposicoes" checked>
+                        <label>Reposições</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="mostrarAntecipacoes" checked>
+                        <label>Antecipações</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="mostrarAusencias" checked>
+                        <label>Ausências</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Distribuição de Atividades</div>
+                        <div class="chart-subtitle">Visão geral do período</div>
+                    </div>
+                    <canvas id="pieChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Evolução Mensal</div>
+                        <div class="chart-subtitle">Selecione os tipos no filtro</div>
+                    </div>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+    // Menu Toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    function closeMenu() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', closeMenu);
+
+    const API = 'http://10.14.3.69:8080';
+    let user = null;
+    let todosRegistros = [];
+    let chartPizza = null;
+    let chartLinha = null;
+
+// Função para gerar o menu baseado no tipo do usuário
+function gerarMenu() {
+    const userData = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+    const tipo = userData ? userData.tipo : null;
+    
+    // Se for professor, redirecionar para calendario_professor.html
+    if (tipo === 'professor') {
+        window.location.href = 'calendario_professor.html';
+        return;
+    }
+    
+    const navMenu = document.getElementById('navMenu');
+    if (!navMenu) return;
+    
+    // Links para coordenador, técnico administrativo e admin
+    let links = [
+        { href: 'pagina-inicial.html', icon: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z', text: 'Dashboard' },
+        { href: 'formulario.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Novo Registro' },
+        { href: 'historico-de-registro.html', icon: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Histórico' },
+        { href: 'pagina-administrativa.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Controle de Aulas' }
+    ];
+    
+    // Se for COORDENADOR, adicionar o link do calendário
+    if (tipo === 'coordenador') {
+        links.push({ 
+            href: 'calendario_professor.html', 
+            icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', 
+            text: 'Calendário' 
+        });
+    }
+    
+    // Se for ADMIN, adicionar o link de gerenciar usuários
+    if (tipo === 'admin') {
+        links.push({ 
+            href: 'admin_usuarios.html', 
+            icon: 'M12 4a4 4 0 10-8 0 4 4 0 008 0zm-4 6a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zm7 0a3 3 0 00-3 3v1h6v-1a3 3 0 00-3-3z', 
+            text: 'Gerenciar Usuários' 
+        });
+    }
+    
+    // Gerar HTML dos links
+    let html = '';
+    links.forEach(link => {
+        const isActive = window.location.pathname.includes(link.href.replace('.html', ''));
+        const activeClass = isActive ? 'active' : '';
+        
+        html += `
+            <a href="${link.href}" class="nav-item ${activeClass}">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="${link.icon}"/>
+                </svg>
+                ${link.text}
+            </a>
+        `;
+    });
+    
+    // Adicionar o logout no final
+    html += `
+        <div class="logout-section">
+            <a href="javascript:void(0)" onclick="logout()" class="btn-logout">
+                <svg class="logout-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                </svg>
+                Sair do Sistema
+            </a>
+        </div>
+    `;
+    
+    navMenu.innerHTML = html;
+}
+
+    function converterData(dataStr) {
+        if (!dataStr) return null;
+        try {
+            if (typeof dataStr === 'string' && dataStr.includes(',')) {
+                const partes = dataStr.split(' ');
+                if (partes.length >= 4) {
+                    const mesesMap = { 
+                        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11 
+                    };
+                    const dia = parseInt(partes[1]);
+                    const mes = mesesMap[partes[2]];
+                    const ano = parseInt(partes[3]);
+                    return new Date(ano, mes, dia);
+                }
+            } else if (typeof dataStr === 'string' && dataStr.includes('-')) {
+                const partes = dataStr.split('T')[0].split('-');
+                if (partes.length === 3) {
+                    return new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+                }
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    function formatarData(data) {
+        if (!data) return 'Data inválida';
+        try {
+            const d = new Date(data);
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleDateString('pt-BR');
+            }
+        } catch (e) {}
+        if (typeof data === 'string' && data.includes(',')) {
+            const partes = data.split(' ');
+            if (partes.length >= 4) {
+                const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+                    'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+                return `${partes[1]}/${meses[partes[2]]}/${partes[3]}`;
+            }
+        }
+        return 'Data inválida';
+    }
+
+    async function carregarProfessores() {
+        try {
+            const response = await fetch(`${API}/professores_lista`);
+            const data = await response.json();
+            const select = document.getElementById('filtroProfessor');
+            select.innerHTML = '<option value="">Todos os professores</option>';
+            if (data.professores && data.professores.length > 0) {
+                data.professores.forEach(prof => {
+                    select.innerHTML += `<option value="${prof.id}">${prof.nome}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Erro ao carregar professores:', error);
+        }
+    }
+
+    function filtrarRegistros() {
+        const dataInicio = document.getElementById('dataInicio').value;
+        const dataFim = document.getElementById('dataFim').value;
+        const professorId = document.getElementById('filtroProfessor').value;
+        const disciplina = document.getElementById('filtroDisciplina').value.toLowerCase().trim();
+        
+        let filtrados = [...todosRegistros];
+        
+        if (dataInicio) {
+            const inicio = new Date(dataInicio + 'T00:00:00');
+            filtrados = filtrados.filter(r => {
+                const dataReg = converterData(r.data);
+                return dataReg && dataReg >= inicio;
+            });
+        }
+        if (dataFim) {
+            const fim = new Date(dataFim + 'T23:59:59');
+            filtrados = filtrados.filter(r => {
+                const dataReg = converterData(r.data);
+                return dataReg && dataReg <= fim;
+            });
+        }
+        if (professorId) {
+            filtrados = filtrados.filter(r => r.professor_id == professorId);
+        }
+        if (disciplina) {
+            filtrados = filtrados.filter(r => r.disciplina && r.disciplina.toLowerCase().includes(disciplina));
+        }
+        return filtrados;
+    }
+
+    function calcularTotais(registros) {
+        let reposicoes = 0, antecipacoes = 0, ausencias = 0;
+        registros.forEach(r => {
+            const qtd = r.quantidade || 0;
+            const tipo = r.tipo ? r.tipo.toLowerCase() : '';
+            if (tipo === 'reposicao' || tipo === 'reposição') reposicoes += qtd;
+            else if (tipo === 'antecipacao' || tipo === 'antecipação') antecipacoes += qtd;
+            else if (tipo === 'ausencia' || tipo === 'ausência') ausencias += qtd;
+        });
+        return { reposicoes, antecipacoes, ausencias };
+    }
+
+    function agruparPorMes(registros) {
+        const meses = {};
+        registros.forEach(reg => {
+            const data = converterData(reg.data);
+            if (!data || isNaN(data.getTime())) return;
+            const chave = `${data.getFullYear()}-${data.getMonth()}`;
+            const rotulo = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '').toLowerCase();
+            const qtd = reg.quantidade || 0;
+            const tipo = reg.tipo ? reg.tipo.toLowerCase() : '';
+            if (!meses[chave]) {
+                meses[chave] = { rotulo, reposicoes: 0, antecipacoes: 0, ausencias: 0, total: 0, timestamp: data.getTime() };
+            }
+            if (tipo === 'reposicao' || tipo === 'reposição') meses[chave].reposicoes += qtd;
+            else if (tipo === 'antecipacao' || tipo === 'antecipação') meses[chave].antecipacoes += qtd;
+            else if (tipo === 'ausencia' || tipo === 'ausência') meses[chave].ausencias += qtd;
+            meses[chave].total += qtd;
+        });
+        const sorted = Object.values(meses).sort((a, b) => a.timestamp - b.timestamp);
+        return {
+            meses: sorted.map(m => m.rotulo),
+            reposicoes: sorted.map(m => m.reposicoes),
+            antecipacoes: sorted.map(m => m.antecipacoes),
+            ausencias: sorted.map(m => m.ausencias),
+            total: sorted.map(m => m.total)
+        };
+    }
+
+    function atualizarGraficoPizza(registros) {
+        const canvas = document.getElementById('pieChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (chartPizza) chartPizza.destroy();
+        const totais = calcularTotais(registros);
+        const dados = [totais.reposicoes, totais.antecipacoes, totais.ausencias];
+        if (dados.some(v => v > 0)) {
+            chartPizza = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Reposições', 'Antecipações', 'Ausências'],
+                    datasets: [{ data: dados, backgroundColor: ['#0366d6', '#f9c74f', '#d73a49'], borderWidth: 0, cutout: '60%' }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } }, layout: { padding: { top: 5, bottom: 5, left: 5, right: 5 } } }
+            });
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sem dados para exibir', canvas.width / 2, canvas.height / 2);
+        }
+    }
+
+    function atualizarGraficoLinha(registros) {
+        const canvas = document.getElementById('lineChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (chartLinha) chartLinha.destroy();
+        const dadosPorMes = agruparPorMes(registros);
+        if (dadosPorMes.meses.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sem dados para exibir', canvas.width / 2, canvas.height / 2);
+            return;
+        }
+        const mostrarRep = document.getElementById('mostrarReposicoes').checked;
+        const mostrarAnt = document.getElementById('mostrarAntecipacoes').checked;
+        const mostrarAus = document.getElementById('mostrarAusencias').checked;
+        const datasets = [];
+        if (mostrarRep) datasets.push({ label: 'Reposições', data: dadosPorMes.reposicoes, borderColor: '#0366d6', backgroundColor: 'rgba(3, 102, 214, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
+        if (mostrarAnt) datasets.push({ label: 'Antecipações', data: dadosPorMes.antecipacoes, borderColor: '#f9c74f', backgroundColor: 'rgba(249, 199, 79, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
+        if (mostrarAus) datasets.push({ label: 'Ausências', data: dadosPorMes.ausencias, borderColor: '#d73a49', backgroundColor: 'rgba(215, 58, 73, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
+        if (datasets.length === 0) datasets.push({ label: 'Total de Aulas', data: dadosPorMes.total, borderColor: '#2d8659', backgroundColor: 'rgba(45, 134, 89, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
+        chartLinha = new Chart(ctx, {
+            type: 'line',
+            data: { labels: dadosPorMes.meses, datasets },
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} aula${ctx.raw !== 1 ? 's' : ''}` } }, legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Quantidade de Aulas' } }, x: { title: { display: true, text: 'Mês/Ano' }, ticks: { maxRotation: 45, minRotation: 45 } } }
+            }
+        });
+    }
+
+    function atualizarDash() {
+        const registrosFiltrados = filtrarRegistros();
+        atualizarGraficoPizza(registrosFiltrados);
+        atualizarGraficoLinha(registrosFiltrados);
+    }
+
+    async function carregarDados() {
+        try {
+            const resp = await fetch(`${API}/registros`);
+            const data = await resp.json();
+            todosRegistros = data.registros || [];
+            atualizarDash();
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+        }
+    }
+
+    function definirDatasPadrao() {
+        const hoje = new Date();
+        const trintaDiasAtras = new Date(hoje);
+        trintaDiasAtras.setDate(hoje.getDate() - 30);
+        document.getElementById('dataInicio').value = trintaDiasAtras.toISOString().split('T')[0];
+        document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+    }
+
+    function logout() { 
+        localStorage.removeItem('user'); 
+        sessionStorage.removeItem('user');
+        window.location.href = 'login.html'; 
+    }
+
+    // Inicialização principal
+    document.addEventListener('DOMContentLoaded', function() {
+        // Primeiro, gerar o menu
+        gerarMenu();
+        
+        // Depois, carregar os dados
+        user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+        
+        if (!user) { 
+            console.log('Usuário não encontrado, redirecionando para login');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Verificar se tem permissão (admin, coordenador ou tecnico_administrativo)
+        if (user.tipo !== 'admin' && user.tipo !== 'coordenador' && user.tipo !== 'tecnico_administrativo') {
+            console.log('Usuário sem permissão, redirecionando para login');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        console.log('Usuário logado:', user);
+        console.log('Tipo do usuário:', user.tipo);
+        
+        document.getElementById('userNameDisplay').textContent = user.nome;
+        const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+        document.getElementById('userAvatarDisplay').textContent = iniciais;
+        
+        // Definir o papel do usuário para exibição
+        let roleText = '';
+        if (user.tipo === 'admin') roleText = 'Administrador';
+        else if (user.tipo === 'coordenador') roleText = 'Coordenador';
+        else if (user.tipo === 'tecnico_administrativo') roleText = 'Técnico Administrativo';
+        else roleText = 'Usuário';
+        document.getElementById('userRoleDisplay').textContent = roleText;
+        
+        definirDatasPadrao();
+        carregarProfessores();
+        carregarDados();
+        
+        document.getElementById('btnAtualizar').addEventListener('click', atualizarDash);
+        document.getElementById('mostrarReposicoes').addEventListener('change', () => atualizarDash());
+        document.getElementById('mostrarAntecipacoes').addEventListener('change', () => atualizarDash());
+        document.getElementById('mostrarAusencias').addEventListener('change', () => atualizarDash());
+        document.getElementById('dataInicio').addEventListener('change', atualizarDash);
+        document.getElementById('dataFim').addEventListener('change', atualizarDash);
+        document.getElementById('filtroProfessor').addEventListener('change', atualizarDash);
+        document.getElementById('filtroDisciplina').addEventListener('input', atualizarDash);
+    });
+</script>
+
+</body>
+</html>

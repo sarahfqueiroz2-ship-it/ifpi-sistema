@@ -197,8 +197,9 @@ def criar_tabelas():
 @app.route('/')
 @app.route('/<path:filename>')
 def frontend(filename='login.html'):
-    return send_from_directory('/home/paulo/ifpi-frontend', filename)
-
+    # Usa a mesma pasta do app.py
+    import os
+    return send_from_directory('.', filename)
 # ================== ROTAS DE AUTENTICAÇÃO ==================
 
 @app.route('/login', methods=['POST'])

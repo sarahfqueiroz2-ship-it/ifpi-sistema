@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - IFPI Campus Pedro II</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --verde-principal: #2d8659;
+            --verde-escuro: #1a5438;
+            --branco: #ffffff;
+            --cinza-bg: #fafbfc;
+            --cinza-medio: #f5f6f7;
+            --cinza-borda: #e1e4e8;
+            --cinza-texto: #24292e;
+            --cinza-secundario: #586069;
+            --vermelho: #d73a49;
+            --amarelo: #f9c74f;
+            --azul: #0366d6;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--cinza-bg);
+            color: var(--cinza-texto);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--branco);
+            border-right: 1px solid var(--cinza-borda);
+            padding: 24px 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 24px;
+        }
+
+        .logo-box {
+            width: 48px;
+            height: 48px;
+            background-color: var(--verde-principal);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .logo-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            line-height: 1.4;
+        }
+
+        .nav-menu {
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            color: var(--cinza-secundario);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .nav-item.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            left: 260px;
+            right: 0;
+            top: 0;
+            height: 64px;
+            background-color: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 90;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .user-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-info {
+    text-align: right;
+    white-space: nowrap; /* Evita quebra de linha */
+}
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            display: block;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--cinza-secundario);
+        }
+
+        .user-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px; /* Evita compressão */
+    min-height: 40px; /* Evita compressão */
+    border-radius: 50%;
+    background-color: var(--verde-principal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--branco);
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0; /* Impede que o avatar encolha */
+}
+
+        .btn-logout {
+            padding: 8px 16px;
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            color: var(--cinza-texto);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: var(--cinza-medio);
+            border-color: var(--cinza-texto);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 64px;
+            padding: 32px;
+            min-height: calc(100vh - 64px);
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 24px;
+            transition: box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--cinza-secundario);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.5;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--cinza-texto);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-description {
+            font-size: 13px;
+            color: var(--cinza-secundario);
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .stat-badge.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .stat-badge.neutral {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .stat-badge.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .stat-badge.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .stat-value.positive {
+            color: var(--verde-principal);
+        }
+
+        .stat-value.negative {
+            color: var(--vermelho);
+        }
+
+        .stat-value.neutral {
+            color: var(--azul);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .chart-subtitle {
+            font-size: 13px;
+            color: var(--cinza-secundario);
+            margin-top: 2px;
+        }
+
+        /* Table Section */
+        .table-section {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background-color: var(--verde-principal);
+            color: var(--branco);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-escuro);
+        }
+
+        .table-content {
+            padding: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cinza-secundario);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        td {
+            padding: 16px 12px;
+            font-size: 14px;
+            color: var(--cinza-texto);
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.antecipacao {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.reposicao {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge.ausencia {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .header,
+            .main-content {
+                margin-left: 0;
+                left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 0 16px;
+            }
+
+            .main-content {
+                padding: 20px 16px;
+            }
+        }
+
+        .logout-section {
+    position: absolute;
+    bottom: 24px;
+    left: 16px;
+    right: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--cinza-borda);
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: var(--vermelho);
+    background-color: transparent;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-logout:hover {
+    background-color: #fee;
+    color: #b91c1c;
+}
+
+.logout-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+}
+
+/* Adicione isso no final do seu arquivo de estilo */
+.chart-card {
+    height: 300px; /* Altura fixa para o card */
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card canvas {
+    max-height: 220px; /* Altura máxima para o gráfico */
+    width: 100% !important;
+    height: auto !important;
+}
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <div class="logo-box">IF</div>
+            <div class="logo-text">IFPI Campus Pedro II</div>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="pagina-inicial.html" class="nav-item active">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="formulario.html" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                </svg>
+                Novo Registro
+            </a>
+            <a href="historico-de-registro.html" class="nav-item">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                Histórico
+            </a>
+
+            <div class="logout-section">
+    <a href="login.html" class="btn-logout">
+        <svg class="logout-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+        </svg>
+        Sair do Sistema
+    </a>
+</div>
+        </nav>
+    </aside>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">Painel de Controle</div>
+        <div class="user-section">
+            <div class="user-info">
+                <span class="user-name">João Silva</span>
+                <span class="user-role">Professor</span>
+            </div>
+            <div class="user-avatar">JS</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Reposições</span>
+                    </div>
+                    <div class="stat-value" style="color: var(--azul);">0</div>
+                    <div class="stat-description">Aulas repostas no período</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Antecipações</span>
+                    </div>
+                    <div class="stat-value" style="color: var(--amarelo);">0</div>
+                    <div class="stat-description">Aulas antecipadas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Ausências</span>
+                    </div>
+                    <div class="stat-value" style="color: var(--vermelho);">0</div>
+                    <div class="stat-description">Faltas registradas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Saldo</span>
+                    </div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-description">Balanço de carga horária</div>
+                    <span class="stat-badge neutral">Neutro</span>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">Distribuição de Atividades</div>
+                            <div class="chart-subtitle">Visão geral do período</div>
+                        </div>
+                    </div>
+                    <canvas id="pieChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">Evolução Mensal</div>
+                            <div class="chart-subtitle">Últimos 6 meses</div>
+                        </div>
+                    </div>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activity Table -->
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="table-title">Últimos Registros</div>
+                    <button class="btn-primary" onclick="novoRegistro()">Novo Registro</button>
+                </div>
+                <div class="table-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Curso</th>
+                                <th>Quantidade</th>
+                                <th>Horário</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+    const API = 'http://10.14.3.69:8080';
+    let user = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar se usuário está logado
+        user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Atualizar nome e avatar do usuário
+        const userInfo = document.querySelector('.user-info .user-name');
+        const userAvatar = document.querySelector('.user-avatar');
+        const userRole = document.querySelector('.user-role');
+
+        if (userInfo) userInfo.textContent = user.nome;
+        if (userAvatar) userAvatar.textContent = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+        if (userRole) userRole.textContent = user.tipo === 'professor' ? 'Professor' : 'Administrador';
+
+        // Carregar dados do dashboard
+        carregarDashboard();
+    });
+
+    async function carregarDashboard() {
+        try {
+            // Buscar estatísticas do professor
+            const statsResponse = await fetch(`${API}/dashboard/${user.id}`);
+            const stats = await statsResponse.json();
+
+            // Atualizar os cards
+            const cards = document.querySelectorAll('.stat-card');
+
+            if (cards[0]) cards[0].querySelector('.stat-value').textContent = stats.reposicoes || 0;
+            if (cards[1]) cards[1].querySelector('.stat-value').textContent = stats.antecipacoes || 0;
+            if (cards[2]) cards[2].querySelector('.stat-value').textContent = stats.ausencias || 0;
+
+            if (cards[3]) {
+                cards[3].querySelector('.stat-value').textContent = stats.saldo || 0;
+                const badge = cards[3].querySelector('.stat-badge');
+                if (badge) {
+                    if (stats.saldo > 0) {
+                        badge.textContent = 'Positivo';
+                        badge.className = 'stat-badge success';
+                    } else if (stats.saldo < 0) {
+                        badge.textContent = 'Negativo';
+                        badge.className = 'stat-badge danger';
+                    } else {
+                        badge.textContent = 'Neutro';
+                        badge.className = 'stat-badge neutral';
+                    }
+                }
+            }
+
+            // Buscar registros para a tabela e gráficos
+            const registrosResponse = await fetch(`${API}/registros?professor_id=${user.id}`);
+            const registrosData = await registrosResponse.json();
+            const registros = registrosData.registros || [];
+
+            // ===== GRÁFICO DE PIZZA =====
+            const pieCtx = document.getElementById('pieChart');
+            if (pieCtx) {
+                const ctx = pieCtx.getContext('2d');
+                
+                // Verificar se já existe um gráfico e destruir apenas se for do Chart.js
+                if (window.pieChart && typeof window.pieChart.destroy === 'function') {
+                    window.pieChart.destroy();
+                }
+                
+                // Dados para o gráfico
+                const dados = [
+                    stats.reposicoes || 0,
+                    stats.antecipacoes || 0, 
+                    stats.ausencias || 0
+                ];
+                
+                // Verificar se tem algum dado
+                const temDados = dados.some(valor => valor > 0);
+                
+                if (temDados) {
+                    window.pieChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Reposições', 'Antecipações', 'Ausências'],
+                            datasets: [{
+                                data: dados,
+                                backgroundColor: ['#0366d6', '#f9c74f', '#d73a49'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    ctx.clearRect(0, 0, pieCtx.width, pieCtx.height);
+                    ctx.font = '14px Arial';
+                    ctx.fillStyle = '#666';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Sem dados para exibir', pieCtx.width/2, pieCtx.height/2);
+                }
+            }
+
+            // ===== GRÁFICO DE LINHA (Evolução Mensal) =====
+            const lineCtx = document.getElementById('lineChart');
+            if (lineCtx) {
+                const ctx = lineCtx.getContext('2d');
+                
+                // Verificar se já existe um gráfico e destruir apenas se for do Chart.js
+                if (window.lineChart && typeof window.lineChart.destroy === 'function') {
+                    window.lineChart.destroy();
+                }
+                
+                // Gerar últimos 6 meses
+                const meses = [];
+                const dadosMensais = [];
+                const hoje = new Date();
+                
+                for (let i = 5; i >= 0; i--) {
+                    const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+                    const nomeMes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+                    meses.push(nomeMes);
+                    
+                    // Filtrar registros do mês
+                    const registrosMes = registros.filter(reg => {
+                        const regData = new Date(reg.data + 'T00:00:00');
+                        return regData.getMonth() === data.getMonth() && 
+                               regData.getFullYear() === data.getFullYear();
+                    });
+                    
+                    // Somar quantidade de aulas no mês
+                    const totalMes = registrosMes.reduce((acc, reg) => acc + (reg.quantidade || 0), 0);
+                    dadosMensais.push(totalMes);
+                }
+                
+                // Verificar se tem dados
+                const temDadosLinha = dadosMensais.some(valor => valor > 0);
+                
+                if (temDadosLinha) {
+                    window.lineChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: meses,
+                            datasets: [{
+                                label: 'Total de Aulas',
+                                data: dadosMensais,
+                                borderColor: '#2d8659',
+                                backgroundColor: 'rgba(45, 134, 89, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#2d8659',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1,
+                                        callback: function(value) {
+                                            return value + ' aulas';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    ctx.clearRect(0, 0, lineCtx.width, lineCtx.height);
+                    ctx.font = '14px Arial';
+                    ctx.fillStyle = '#666';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Sem dados para exibir', lineCtx.width/2, lineCtx.height/2);
+                }
+            }
+
+            // ===== TABELA DE REGISTROS =====
+            const tbody = document.querySelector('tbody');
+            if (!tbody) return;
+
+            if (registros.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Nenhum registro encontrado</td></tr>';
+            } else {
+                tbody.innerHTML = '';
+                registros.slice(0, 5).forEach(reg => {
+                    // Formatar data
+                    const data = new Date(reg.data + 'T00:00:00');
+                    const dataFormatada = data.toLocaleDateString('pt-BR');
+
+                    // Formatar hora
+                    const horaInicio = reg.horario_inicio ? reg.horario_inicio.substring(0, 5) : '00:00';
+                    const horaFim = reg.horario_fim ? reg.horario_fim.substring(0, 5) : '00:00';
+
+                    // Traduzir tipo
+                    let tipo = reg.tipo;
+                    let classeBadge = '';
+
+                    if (reg.tipo === 'reposicao' || reg.tipo === 'reposição') {
+                        tipo = 'Reposição';
+                        classeBadge = 'reposicao';
+                    } else if (reg.tipo === 'antecipacao' || reg.tipo === 'antecipação') {
+                        tipo = 'Antecipação';
+                        classeBadge = 'antecipacao';
+                    } else if (reg.tipo === 'ausencia' || reg.tipo === 'ausência') {
+                        tipo = 'Ausência';
+                        classeBadge = 'ausencia';
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${dataFormatada}</td>
+                        <td><span class="badge ${classeBadge}">${tipo}</span></td>
+                        <td>${reg.curso_nome || '-'}</td>
+                        <td>${reg.quantidade || 0} aulas</td>
+                        <td>${horaInicio} - ${horaFim}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar dashboard:', error);
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+
+    function novoRegistro() {
+        window.location.href = 'formulario.html';
+    }
+</script>
+
+</body>
+</html>

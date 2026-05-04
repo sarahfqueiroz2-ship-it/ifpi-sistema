@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico - IFPI Campus Pedro II</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --verde-principal: #2d8659;
+            --verde-escuro: #1a5438;
+            --branco: #ffffff;
+            --cinza-bg: #fafbfc;
+            --cinza-medio: #f5f6f7;
+            --cinza-borda: #e1e4e8;
+            --cinza-texto: #24292e;
+            --cinza-secundario: #586069;
+            --vermelho: #d73a49;
+            --amarelo: #f9c74f;
+            --azul: #0366d6;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--cinza-bg);
+            color: var(--cinza-texto);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--branco);
+            border-right: 1px solid var(--cinza-borda);
+            padding: 24px 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .logo-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .nav-menu {
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            color: var(--cinza-secundario);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .nav-item.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            left: 260px;
+            right: 0;
+            top: 0;
+            height: 64px;
+            background-color: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 90;
+            transition: left 0.3s ease;
+        }
+
+        /* Botão Menu */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 16px;
+        }
+
+        .menu-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cinza-texto);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            flex: 1;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--verde-principal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            margin-top: 64px;
+            padding: 32px;
+            min-height: calc(100vh - 64px);
+            transition: margin-left 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--cinza-secundario);
+            margin-bottom: 24px;
+        }
+
+        .breadcrumb a {
+            color: var(--verde-principal);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .page-title-section h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cinza-texto);
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            font-size: 14px;
+            color: var(--cinza-secundario);
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background-color: var(--verde-principal);
+            color: var(--branco);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-escuro);
+        }
+
+        /* Stats Summary */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cinza-secundario);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cinza-texto);
+        }
+
+        .stat-value.verde { color: var(--verde-principal); }
+        .stat-value.amarelo { color: var(--amarelo); }
+        .stat-value.vermelho { color: var(--vermelho); }
+        .stat-value.azul { color: var(--azul); }
+
+        /* Filters Card */
+        .filters-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .filters-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .filters-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .btn-clear {
+            padding: 6px 12px;
+            background-color: transparent;
+            border: 1px solid var(--cinza-borda);
+            color: var(--cinza-secundario);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-clear:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--cinza-texto);
+            margin-bottom: 6px;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: var(--cinza-texto);
+            background-color: var(--branco);
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--verde-principal);
+        }
+
+        /* Table Card */
+        .table-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .table-count {
+            font-size: 14px;
+            color: var(--cinza-secundario);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: var(--cinza-medio);
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cinza-secundario);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 16px 24px;
+            font-size: 14px;
+            color: var(--cinza-texto);
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: var(--cinza-medio);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge.antecipacao {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.reposicao {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge.ausencia {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge.base-comum {
+            background-color: #e7f5ff;
+            color: #1864ab;
+        }
+
+        .badge.tecnico {
+            background-color: #d0f0df;
+            color: #1a5438;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            padding: 6px;
+            background-color: transparent;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background-color: var(--cinza-medio);
+        }
+
+        .btn-icon.delete:hover {
+            background-color: #f8d7da;
+            border-color: var(--vermelho);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--branco);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--cinza-secundario);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .btn-close:hover {
+            background-color: var(--cinza-medio);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--cinza-secundario);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-page {
+            padding: 8px 12px;
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-page:hover {
+            background-color: var(--cinza-medio);
+        }
+
+        .btn-page.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+            border-color: var(--verde-principal);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .logout-section {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--vermelho);
+            background-color: transparent;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background-color: #fee;
+            color: #b91c1c;
+        }
+
+        .logout-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .filters-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .header {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .header {
+                padding: 0 16px;
+            }
+            .main-content {
+                padding: 20px 16px;
+            }
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+            .table-container {
+                overflow-x: scroll;
+            }
+            .pagination {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <img src="logo-aside.png" alt="IFPI Campus Pedro II">
+        </div>
+
+<nav class="nav-menu" id="navMenu"></nav>
+
+    </aside>
+
+
+<header class="header">
+    <button class="menu-toggle" id="menuToggle">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+        </svg>
+    </button>
+    <div class="header-title">Histórico de Registros</div>
+    <div class="user-section">
+        <div class="user-info">
+            <span class="user-name" id="userNameDisplay">Carregando...</span>
+            <span class="user-role" id="userRoleDisplay"></span>
+        </div>
+        <div class="user-avatar" id="userAvatarDisplay">--</div>
+    </div>
+</header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="pagina-inicial.html">Dashboard</a>
+                <span>/</span>
+                <span>Histórico</span>
+            </div>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-section">
+                    <h1>Histórico de Registros</h1>
+                    <p class="page-description">Visualize e gerencie todos os seus registros de atividades</p>
+                </div>
+                <a href="formulario.html" class="btn-primary">Novo Registro</a>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="stats-summary">
+                <div class="stat-box">
+                    <div class="stat-label">Total de Registros</div>
+                    <div class="stat-value" id="totalRegistros">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Antecipações</div>
+                    <div class="stat-value amarelo" id="totalAntecipacoes">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Reposições</div>
+                    <div class="stat-value azul" id="totalReposicoes">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Ausências</div>
+                    <div class="stat-value vermelho" id="totalAusencias">0</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-card">
+                <div class="filters-header">
+                    <h2 class="filters-title">Filtros</h2>
+                    <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
+                </div>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Período Inicial</label>
+                        <input type="date" class="filter-input" id="dataInicio">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Período Final</label>
+                        <input type="date" class="filter-input" id="dataFim">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Tipo de Registro</label>
+                        <select class="filter-select" id="tipoFiltro">
+                            <option value="">Todos</option>
+                            <option value="antecipacao">Antecipação</option>
+                            <option value="reposicao">Reposição</option>
+                            <option value="ausencia">Ausência</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Curso</label>
+                        <select class="filter-select" id="cursoFiltro">
+                            <option value="">Todos</option>
+                            <option value="tecnico-informatica">Técnico em Informática integrado ao médio</option>
+                            <option value="tecnico-administracao">Técnico em Administração integrado ao médio</option>
+                            <option value="tecnico-meio-ambiente">Técnico em Meio Ambiente integrado ao médio</option>
+                            <option value="gastronomia">Gastronomia</option>
+                            <option value="gastronomia-proeja">Gastronomia PROEJA</option>
+                            <option value="restaurante-bar">Restaurante e Bar</option>
+                            <option value="licenciatura-biologia">Licenciatura em Ciências Biológicas</option>
+                            <option value="bacharelado-administracao">Bacharelado em Administração</option>
+                            <option value="tecnologo-marketing">Tecnólogo em Marketing</option>
+                            <option value="tecnologo-ads">Tecnólogo em Análise e Desenvolvimento de Sistemas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">Todos os Registros</h2>
+                    <span class="table-count" id="registrosEncontrados">0 registros encontrados</span>
+                </div>
+                <div class="table-container">
+                    <table id="tabelaRegistros">
+                        <thead>
+                            <tr>
+        <th>ID</th>
+
+                                <th>Professor</th>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Curso</th>
+                                <th>Série/Módulo</th>
+                                <th>Quantidade</th>
+                                <th>Tipo Prof.</th>
+                                <th>Horários</th>
+                                <th>Disciplina</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Mostrando <span id="mostrandoInicio">0</span>-<span id="mostrandoFim">0</span> de <span id="totalItens">0</span> registros
+                    </div>
+                    <div class="pagination-buttons">
+                        <button class="btn-page" disabled>Anterior</button>
+                        <button class="btn-page active">1</button>
+                        <button class="btn-page" disabled>Próximo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Visualização -->
+    <div class="modal" id="modalVisualizacao">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Detalhes do Registro</h3>
+                <button class="btn-close" onclick="fecharModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal" id="modalEdicao">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Editar Registro</h3>
+                <button class="btn-close" onclick="fecharModalEdicao()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBodyEdicao">
+                <form id="formEdicao">
+                    <input type="hidden" id="editId">
+                    
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Data</label>
+                            <input type="date" id="editData" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select id="editTipo" class="form-select" required>
+                                <option value="antecipacao">Antecipação</option>
+                                <option value="reposicao">Reposição</option>
+                                <option value="ausencia">Ausência</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Curso</label>
+                            <select id="editCurso" class="form-select" required>
+                                <option value="">Carregando...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Série/Módulo</label>
+                            <select id="editSerie" class="form-select" required>
+                                <option value="1-ano-integrado">1º Ano Integrado</option>
+                                <option value="2-ano-integrado">2º Ano Integrado</option>
+                                <option value="3-ano-integrado">3º Ano Integrado</option>
+                                <option value="1-ano-proeja">1º Ano PROEJA</option>
+                                <option value="2-ano-proeja">2º Ano PROEJA</option>
+                                <option value="3-ano-proeja">3º Ano PROEJA</option>
+                                <option value="1-modulo-subsequente">1º Módulo Subsequente</option>
+                                <option value="2-modulo-subsequente">2º Módulo Subsequente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Quantidade de Aulas</label>
+                            <select id="editQuantidade" class="form-select" required>
+                                <option value="1">1 aula</option>
+                                <option value="2">2 aulas</option>
+                                <option value="3">3 aulas</option>
+                                <option value="4">4 aulas</option>
+                                <option value="5">5 aulas</option>
+                                <option value="6">6 aulas</option>
+                                <option value="7">7 aulas</option>
+                                <option value="8">8 aulas</option>
+                                <option value="9">9 aulas</option>
+                                <option value="10">10 aulas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Horário Início</label>
+                            <select id="editHorarioInicio" class="form-select" required>
+                                <option value="07:00">07:00</option>
+                                <option value="08:00">08:00</option>
+                                <option value="09:00">09:00</option>
+                                <option value="10:20">10:20</option>
+                                <option value="11:20">11:20</option>
+                                <option value="13:00">13:00</option>
+                                <option value="14:00">14:00</option>
+                                <option value="15:00">15:00</option>
+                                <option value="16:00">16:00</option>
+                                <option value="17:00">17:00</option>
+                                <option value="18:00">18:00</option>
+                                <option value="19:00">19:00</option>
+                                <option value="20:00">20:00</option>
+                                <option value="21:00">21:00</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Disciplina</label>
+                            <input type="text" id="editDisciplina" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações</label>
+                            <textarea id="editObservacoes" class="form-textarea" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="fecharModalEdicao()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+        
+<script>
+    const API = 'http://10.14.3.69:8080';
+    let user = null;
+    let todosRegistros = [];
+
+    // Menu Toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    function closeMenu() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', closeMenu);
+
+
+// ================== FUNÇÕES DE MENU ==================
+function gerarMenu() {
+    const userData = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+    const tipo = userData ? userData.tipo : null;
+    
+    // Se for professor, redirecionar para calendario_professor.html
+    if (tipo === 'professor') {
+        window.location.href = 'calendario_professor.html';
+        return;
+    }
+    
+    const navMenu = document.getElementById('navMenu');
+    if (!navMenu) return;
+    
+    // Links para coordenador, técnico administrativo e admin
+    let links = [
+        { href: 'pagina-inicial.html', icon: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z', text: 'Dashboard' },
+        { href: 'formulario.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Novo Registro' },
+        { href: 'historico-de-registro.html', icon: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Histórico' },
+        { href: 'pagina-administrativa.html', icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', text: 'Controle de Aulas' }
+    ];
+    
+    // Se for COORDENADOR, adicionar o link do calendário
+    if (tipo === 'coordenador') {
+        links.push({ 
+            href: 'calendario_professor.html', 
+            icon: 'M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z', 
+            text: 'Calendário' 
+        });
+    }
+    
+    // Se for ADMIN, adicionar o link de gerenciar usuários
+    if (tipo === 'admin') {
+        links.push({ 
+            href: 'admin_usuarios.html', 
+            icon: 'M12 4a4 4 0 10-8 0 4 4 0 008 0zm-4 6a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zm7 0a3 3 0 00-3 3v1h6v-1a3 3 0 00-3-3z', 
+            text: 'Gerenciar Usuários' 
+        });
+    }
+    
+    // Gerar HTML dos links
+    let html = '';
+    links.forEach(link => {
+        const isActive = window.location.pathname.includes(link.href.replace('.html', ''));
+        const activeClass = isActive ? 'active' : '';
+        
+        html += `
+            <a href="${link.href}" class="nav-item ${activeClass}">
+                <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="${link.icon}"/>
+                </svg>
+                ${link.text}
+            </a>
+        `;
+    });
+    
+    // Adicionar o logout no final
+    html += `
+        <div class="logout-section">
+            <a href="javascript:void(0)" onclick="logout()" class="btn-logout">
+                <svg class="logout-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                </svg>
+                Sair do Sistema
+            </a>
+        </div>
+    `;
+    
+    navMenu.innerHTML = html;
+}
+
+function logout() {
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+
+    // ================== FUNÇÕES DO HISTÓRICO ==================
+    
+    async function carregarRegistros() {
+        try {
+            console.log('Carregando registros...');
+            const url = `${API}/registros_com_horarios`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+
+            todosRegistros = data.registros || [];
+            console.log('Registros carregados:', todosRegistros.length);
+
+            if (todosRegistros.length > 0) {
+                renderizarTabela(todosRegistros);
+                atualizarContadores(todosRegistros);
+            } else {
+                document.querySelector('#tabelaRegistros tbody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">Nenhum registro encontrado.<\/td><\/tr>';
+                document.getElementById('totalRegistros').textContent = '0';
+                document.getElementById('totalAntecipacoes').textContent = '0';
+                document.getElementById('totalReposicoes').textContent = '0';
+                document.getElementById('totalAusencias').textContent = '0';
+                document.getElementById('registrosEncontrados').textContent = '0 registro(s) encontrado(s)';
+            }
+        } catch(err) {
+            console.error('Erro ao carregar registros:', err);
+            document.querySelector('#tabelaRegistros tbody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">Erro ao carregar registros.<\/td><\/tr>';
+        }
+    }
+
+    function atualizarContadores(registros) {
+        let totalAulas = 0, antecipacoes = 0, reposicoes = 0, ausencias = 0;
+        if (registros && registros.length > 0) {
+            registros.forEach(r => {
+                const qtd = r.quantidade || 0;
+                totalAulas += qtd;
+                const tipo = r.tipo ? r.tipo.toLowerCase() : '';
+                if (tipo === 'antecipacao' || tipo === 'antecipação') antecipacoes += qtd;
+                else if (tipo === 'reposicao' || tipo === 'reposição') reposicoes += qtd;
+                else if (tipo === 'ausencia' || tipo === 'ausência') ausencias += qtd;
+            });
+        }
+        document.getElementById('totalRegistros').textContent = totalAulas;
+        document.getElementById('totalAntecipacoes').textContent = antecipacoes;
+        document.getElementById('totalReposicoes').textContent = reposicoes;
+        document.getElementById('totalAusencias').textContent = ausencias;
+        document.getElementById('registrosEncontrados').textContent = `${registros ? registros.length : 0} registro(s) encontrado(s)`;
+    }
+
+    function formatarData(data) {
+        if (!data) return 'Data inválida';
+        try {
+            if (typeof data === 'string' && data.includes(',')) {
+                const partes = data.split(' ');
+                if (partes.length >= 4) {
+                    const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+                    return `${partes[1]}/${meses[partes[2]]}/${partes[3]}`;
+                }
+            } else if (typeof data === 'string' && data.includes('-')) {
+                const partes = data.split('T')[0].split('-');
+                if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+        } catch(e) {}
+        return 'Data inválida';
+    }
+
+    function formatarDataParaInput(data) {
+        if (!data) return '';
+        try {
+            if (typeof data === 'string' && data.includes(',')) {
+                const partes = data.split(' ');
+                if (partes.length >= 4) {
+                    const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+                    return `${partes[3]}-${meses[partes[2]]}-${partes[1].padStart(2, '0')}`;
+                }
+            } else if (typeof data === 'string' && data.includes('-')) {
+                return data.split('T')[0];
+            }
+        } catch(e) {}
+        return '';
+    }
+
+    function renderizarTabela(registros) {
+        const tbody = document.querySelector('#tabelaRegistros tbody');
+        tbody.innerHTML = '';
+        if (!registros || registros.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">Nenhum registro encontrado.<\/td><\/tr>';
+            return;
+        }
+
+        const gruposMap = new Map();
+        registros.forEach(reg => {
+            const professor = reg.professor_nome || 'Professor não informado';
+            const curso = reg.curso_nome || 'Curso não informado';
+            const serie = reg.serie || 'Série não informada';
+            const disciplina = reg.disciplina || 'Disciplina não informada';
+            const chave = `${professor}|${curso}|${serie}|${disciplina}`;
+            if (!gruposMap.has(chave)) {
+                gruposMap.set(chave, { professor, curso, serie, disciplina, registros: [], totalAulas: 0, antecipadas: 0, reposicoes: 0, ausencias: 0 });
+            }
+            const grupo = gruposMap.get(chave);
+            grupo.registros.push(reg);
+            const qtd = reg.quantidade || 0;
+            grupo.totalAulas += qtd;
+            const tipo = reg.tipo ? reg.tipo.toLowerCase() : '';
+            if (tipo === 'antecipacao' || tipo === 'antecipação') grupo.antecipadas += qtd;
+            else if (tipo === 'reposicao' || tipo === 'reposição') grupo.reposicoes += qtd;
+            else if (tipo === 'ausencia' || tipo === 'ausência') grupo.ausencias += qtd;
+        });
+
+        gruposMap.forEach(grupo => {
+            const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
+            let statusClass = '', statusTexto = '';
+            if (saldo > 0) { statusClass = 'success'; statusTexto = `${saldo} aula(s) adiantada(s)`; }
+            else if (saldo < 0) { statusClass = 'danger'; statusTexto = `${Math.abs(saldo)} aula(s) em débito`; }
+            else { statusClass = 'neutral'; statusTexto = 'Carga horária OK'; }
+
+            const headerRow = document.createElement('tr');
+            headerRow.style.backgroundColor = 'var(--cinza-medio)';
+            headerRow.innerHTML = `
+                <td colspan="10" style="padding: 16px 24px; background-color: var(--cinza-medio);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                        <div style="font-weight: 600;">
+                            <span style="font-size: 15px;"><strong>${grupo.professor}</strong> - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}</span>
+                        </div>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <span style="font-size: 13px; color: var(--cinza-secundario);">
+                                Total: ${grupo.totalAulas} | Antecipadas: ${grupo.antecipadas} | Reposições: ${grupo.reposicoes} | Ausências: ${grupo.ausencias}
+                            </span>
+                            <span class="badge ${statusClass}" style="font-size: 13px; padding: 6px 12px;">${statusTexto}</span>
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(headerRow);
+
+            grupo.registros.forEach(reg => {
+                const dataFormatada = formatarData(reg.data);
+                let tipoDisplay = reg.tipo, classeBadge = '';
+                const tipo = reg.tipo ? reg.tipo.toLowerCase() : '';
+                if (tipo === 'reposicao' || tipo === 'reposição') { tipoDisplay = 'Reposição'; classeBadge = 'reposicao'; }
+                else if (tipo === 'antecipacao' || tipo === 'antecipação') { tipoDisplay = 'Antecipação'; classeBadge = 'antecipacao'; }
+                else if (tipo === 'ausencia' || tipo === 'ausência') { tipoDisplay = 'Ausência'; classeBadge = 'ausencia'; }
+
+                let classeTipoProfessor = 'base-comum';
+                let tipoProfessorDisplay = reg.tipo_professor || 'Não definido';
+                if (tipoProfessorDisplay === 'Técnico') classeTipoProfessor = 'tecnico';
+                else if (tipoProfessorDisplay === 'Comum') tipoProfessorDisplay = 'Base Comum';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+<td>${reg.id}</td>
+                    <td>${reg.professor_nome || '-'}</td>
+                    <td>${dataFormatada}</td>
+                    <td><span class="badge ${classeBadge}">${tipoDisplay}</span></td>
+                    <td>${reg.curso_nome || '-'}</td>
+                    <td>${reg.serie || '-'}</td>
+                    <td>${reg.quantidade || 0} aulas</td>
+                    <td><span class="badge ${classeTipoProfessor}">${tipoProfessorDisplay}</span></td>
+<td>${reg.horarios || '-'}</td>
+                    <td>${reg.disciplina || '-'}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            const spacerRow = document.createElement('tr');
+            spacerRow.innerHTML = '<td colspan="10" style="padding: 8px; background-color: transparent;"><\/td><\/tr>';
+            tbody.appendChild(spacerRow);
+        });
+    }
+
+    async function carregarCursosSelect(cursoSelecionado = null) {
+        try {
+            const response = await fetch(`${API}/cursos`);
+            const data = await response.json();
+            const select = document.getElementById('editCurso');
+            select.innerHTML = '<option value="">Selecione um curso</option>';
+            data.cursos.forEach(curso => {
+                const option = document.createElement('option');
+                option.value = curso.id;
+                option.textContent = curso.nome;
+                if (cursoSelecionado && curso.id === cursoSelecionado) option.selected = true;
+                select.appendChild(option);
+            });
+        } catch(error) { console.error('Erro ao carregar cursos:', error); }
+    }
+
+    async function editarRegistro(id) {
+        try {
+            const registro = todosRegistros.find(r => r.id === id);
+            if (!registro) return;
+            document.getElementById('editId').value = registro.id;
+            document.getElementById('editData').value = formatarDataParaInput(registro.data);
+            let tipoValue = registro.tipo ? registro.tipo.toLowerCase() : '';
+            if (tipoValue === 'reposição') tipoValue = 'reposicao';
+            if (tipoValue === 'antecipação') tipoValue = 'antecipacao';
+            if (tipoValue === 'ausência') tipoValue = 'ausencia';
+            document.getElementById('editTipo').value = tipoValue;
+            document.getElementById('editQuantidade').value = registro.quantidade || '1';
+            if (registro.horario_inicio) document.getElementById('editHorarioInicio').value = registro.horario_inicio.substring(0,5);
+            document.getElementById('editDisciplina').value = registro.disciplina || '';
+            document.getElementById('editObservacoes').value = registro.observacoes || '';
+            if (registro.serie) document.getElementById('editSerie').value = registro.serie;
+            await carregarCursosSelect(registro.curso_id);
+            document.getElementById('modalEdicao').classList.add('active');
+        } catch(error) {
+            console.error('Erro ao abrir edição:', error);
+            alert('Erro ao carregar dados para edição.');
+        }
+    }
+
+    function fecharModalEdicao() { document.getElementById('modalEdicao').classList.remove('active'); }
+
+    async function excluir(id) {
+        if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+        try {
+            const resp = await fetch(`${API}/registros/${id}`, { method: 'DELETE' });
+            const data = await resp.json();
+            if (data.success) { alert('Registro excluído com sucesso!'); carregarRegistros(); }
+            else alert('Erro ao excluir registro!');
+        } catch(err) { alert('Erro ao conectar com o servidor!'); }
+    }
+
+    function limparFiltros() {
+        document.getElementById('dataInicio').value = '';
+        document.getElementById('dataFim').value = '';
+        document.getElementById('tipoFiltro').value = '';
+        document.getElementById('cursoFiltro').value = '';
+        renderizarTabela(todosRegistros);
+        atualizarContadores(todosRegistros);
+    }
+
+    function filtrar() {
+        const dataInicio = document.getElementById('dataInicio').value;
+        const dataFim = document.getElementById('dataFim').value;
+        const tipo = document.getElementById('tipoFiltro').value;
+        const curso = document.getElementById('cursoFiltro').value;
+
+        if (!todosRegistros || todosRegistros.length === 0) { renderizarTabela([]); atualizarContadores([]); return; }
+
+        const filtrados = todosRegistros.filter(r => {
+            if (dataInicio && r.data) {
+                const dataReg = new Date(r.data);
+                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
+                if (dataReg < dataInicioObj) return false;
+            }
+            if (dataFim && r.data) {
+                const dataReg = new Date(r.data);
+                const dataFimObj = new Date(dataFim + 'T23:59:59');
+                if (dataReg > dataFimObj) return false;
+            }
+            if (tipo) {
+                const tipoReg = r.tipo ? r.tipo.toLowerCase() : '';
+                const tipoFiltro = tipo.toLowerCase();
+                if (tipoFiltro === 'antecipacao' && !(tipoReg === 'antecipacao' || tipoReg === 'antecipação')) return false;
+                if (tipoFiltro === 'reposicao' && !(tipoReg === 'reposicao' || tipoReg === 'reposição')) return false;
+                if (tipoFiltro === 'ausencia' && !(tipoReg === 'ausencia' || tipoReg === 'ausência')) return false;
+            }
+            if (curso) {
+                const cursoNome = r.curso_nome ? r.curso_nome.toLowerCase() : '';
+                const cursoFiltro = curso.toLowerCase();
+                if (cursoFiltro === 'tecnico-informatica' && !cursoNome.includes('informática')) return false;
+                if (cursoFiltro === 'tecnico-administracao' && !cursoNome.includes('administração')) return false;
+                if (cursoFiltro === 'tecnico-meio-ambiente' && !cursoNome.includes('meio ambiente')) return false;
+                if (cursoFiltro === 'gastronomia' && !cursoNome.includes('gastronomia')) return false;
+                if (cursoFiltro === 'gastronomia-proeja' && !(cursoNome.includes('gastronomia') && cursoNome.includes('proeja'))) return false;
+                if (cursoFiltro === 'restaurante-bar' && !(cursoNome.includes('restaurante') && cursoNome.includes('bar'))) return false;
+                if (cursoFiltro === 'licenciatura-biologia' && !(cursoNome.includes('licenciatura') && cursoNome.includes('biológica'))) return false;
+                if (cursoFiltro === 'bacharelado-administracao' && !(cursoNome.includes('bacharelado') && cursoNome.includes('administração'))) return false;
+                if (cursoFiltro === 'tecnologo-marketing' && !(cursoNome.includes('tecnólogo') && cursoNome.includes('marketing'))) return false;
+                if (cursoFiltro === 'tecnologo-ads' && !(cursoNome.includes('tecnólogo') && cursoNome.includes('análise'))) return false;
+            }
+            return true;
+        });
+
+        renderizarTabela(filtrados);
+        atualizarContadores(filtrados);
+    }
+
+    // ================== INICIALIZAÇÃO ==================
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gerar o menu
+        gerarMenu();
+        
+        // Pegar usuário logado
+        user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+        
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // VERIFICAR PERMISSÃO
+        if (user.tipo !== 'admin' && user.tipo !== 'coordenador' && user.tipo !== 'tecnico_administrativo') {
+            alert('Acesso negado. Você não tem permissão para acessar esta página.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // ATUALIZAR HEADER
+        document.getElementById('userNameDisplay').textContent = user.nome;
+        const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+        document.getElementById('userAvatarDisplay').textContent = iniciais;
+        
+        let roleText = '';
+        if (user.tipo === 'admin') roleText = 'Administrador';
+        else if (user.tipo === 'coordenador') roleText = 'Coordenador';
+        else if (user.tipo === 'tecnico_administrativo') roleText = 'Técnico Administrativo';
+        else roleText = 'Usuário';
+        document.getElementById('userRoleDisplay').textContent = roleText;
+        
+        console.log('Usuário logado:', user);
+        console.log('Tipo do usuário:', user.tipo);
+        
+        // Carregar dados
+        carregarRegistros();
+        
+        // Eventos dos filtros
+        document.getElementById('dataInicio').addEventListener('change', filtrar);
+        document.getElementById('dataFim').addEventListener('change', filtrar);
+        document.getElementById('tipoFiltro').addEventListener('change', filtrar);
+        document.getElementById('cursoFiltro').addEventListener('change', filtrar);
+        
+        // Evento do formulário de edição
+        document.getElementById('formEdicao').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const data = document.getElementById('editData').value;
+            const tipo = document.getElementById('editTipo').value;
+            const cursoId = document.getElementById('editCurso').value;
+            const serie = document.getElementById('editSerie').value;
+            const quantidade = document.getElementById('editQuantidade').value;
+            const horarioInicio = document.getElementById('editHorarioInicio').value;
+            const disciplina = document.getElementById('editDisciplina').value;
+            const observacoes = document.getElementById('editObservacoes').value;
+            if (!cursoId) { alert('Selecione um curso!'); return; }
+            const [hora, minuto] = horarioInicio.split(':');
+            const horaFim = parseInt(hora) + parseInt(quantidade);
+            const horaFimAjustada = horaFim >= 24 ? 23 : horaFim;
+            const horarioFim = `${String(horaFimAjustada).padStart(2,'0')}:${minuto}:00`;
+            const payload = { data, tipo, curso_id: parseInt(cursoId), serie, quantidade: parseInt(quantidade), horario_inicio: horarioInicio + ':00', horario_fim: horarioFim, disciplina, observacoes };
+            try {
+                const response = await fetch(`${API}/registros/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.success) { alert('Registro atualizado com sucesso!'); fecharModalEdicao(); carregarRegistros(); }
+                else alert('Erro ao atualizar registro: ' + (result.message || 'Erro desconhecido'));
+            } catch(error) { console.error('Erro:', error); alert('Erro ao conectar com o servidor.'); }
+        });
+    });
+</script>
+</body>
+</html>
