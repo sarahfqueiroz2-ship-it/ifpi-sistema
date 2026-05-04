@@ -155,51 +155,126 @@ def get_dia_nome(dia_num):
     return dias.get(dia_num, 'Dia')
 
 def criar_tabelas():
-    """Cria as tabelas necessárias se não existirem"""
+    """Cria as tabelas necessárias no PostgreSQL (Render)"""
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Tabela usuarios
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            usuario VARCHAR(100) UNIQUE NOT NULL,
+            senha VARCHAR(100) NOT NULL,
+            nome_completo VARCHAR(200) NOT NULL,
+            tipo VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Tabela professores
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS professores (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER REFERENCES usuarios(id),
+            disciplina VARCHAR(200),
+            tipo VARCHAR(50)
+        )
+    """)
+    
+    # Tabela cursos
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cursos (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(200) NOT NULL,
+            turno VARCHAR(50),
+            tipo VARCHAR(50),
+            ativo BOOLEAN DEFAULT TRUE
+        )
+    """)
+    
+    # Tabela turmas
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS turmas (
+            id SERIAL PRIMARY KEY,
+            curso_id INTEGER REFERENCES cursos(id),
+            serie VARCHAR(50),
+            modulo VARCHAR(50),
+            turma VARCHAR(50),
+            ativo BOOLEAN DEFAULT TRUE
+        )
+    """)
+    
+    # Tabela registros
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS registros (
+            id SERIAL PRIMARY KEY,
+            professor_id INTEGER REFERENCES professores(id),
+            professor_nome VARCHAR(200),
+            data DATE NOT NULL,
+            tipo VARCHAR(50),
+            curso_id INTEGER REFERENCES cursos(id),
+            serie VARCHAR(50),
+            quantidade INTEGER,
+            horario_inicio TIME,
+            horario_fim TIME,
+            disciplina VARCHAR(200),
+            observacoes TEXT,
+            tipo_professor VARCHAR(50)
+        )
+    """)
     
     # Tabela calendario_marcacoes
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS calendario_marcacoes (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            turma_id INT NOT NULL,
-            dia_semana INT NOT NULL,
-            horario_id INT NOT NULL,
+            id SERIAL PRIMARY KEY,
+            turma_id INTEGER NOT NULL,
+            dia_semana INTEGER NOT NULL,
+            horario_id INTEGER NOT NULL,
             status VARCHAR(20) DEFAULT 'normal',
-            professor_id INT NULL,
-            dono_original_id INT NULL,
+            professor_id INTEGER,
+            dono_original_id INTEGER,
             semana_inicio DATE NOT NULL,
             data_marcacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_marcacao (turma_id, dia_semana, horario_id, semana_inicio)
+            UNIQUE(turma_id, dia_semana, horario_id, semana_inicio)
         )
     """)
     
     # Tabela notificacoes
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS notificacoes (
-            id INT PRIMARY KEY AUTO_INCREMENT,
+            id SERIAL PRIMARY KEY,
             tipo VARCHAR(50),
-            turma_id INT,
+            turma_id INTEGER,
             turma_nome VARCHAR(100),
             curso_nome VARCHAR(100),
-            dia_semana INT,
+            dia_semana INTEGER,
             dia_nome VARCHAR(50),
-            horario_id INT,
-            professor_origem_id INT,
+            horario_id INTEGER,
+            professor_origem_id INTEGER,
             professor_origem_nome VARCHAR(200),
-            professor_destino_id INT,
+            professor_destino_id INTEGER,
             status VARCHAR(20) DEFAULT 'pendente',
             mensagem TEXT,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            lida_em TIMESTAMP NULL
+            lida_em TIMESTAMP
+        )
+    """)
+    
+    # Tabela recuperacao_senha
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS recuperacao_senha (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(100) NOT NULL,
+            codigo VARCHAR(10) NOT NULL,
+            expira_em TIMESTAMP NOT NULL,
+            usado INTEGER DEFAULT 0,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     
     conn.commit()
     conn.close()
-    print("Tabelas verificadas/criadas com sucesso!")
-
+    print("✅ Tabelas verificadas/criadas com sucesso!")
 # ================== ROTAS ESTÁTICAS ==================
 
 @app.route('/')
