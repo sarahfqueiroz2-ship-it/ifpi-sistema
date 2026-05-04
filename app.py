@@ -17,6 +17,14 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 CORS(app)
 
+# ================== CRIAR TABELAS AUTOMATICAMENTE (RENDER) ==================
+with app.app_context():
+    try:
+        print("📦 Verificando/Criando tabelas no banco de dados...")
+        criar_tabelas()
+        print("✅ Tabelas verificadas/criadas com sucesso!")
+    except Exception as e:
+        print(f"❌ Erro ao criar tabelas: {e}")
 
 # ================== DEBUG COMPLETO ==================
 import sys
