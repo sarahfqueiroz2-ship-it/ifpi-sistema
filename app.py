@@ -324,22 +324,23 @@ def listar_registros():
         rows = cursor.fetchall()
         conn.close()
 
-        print(f"🔍 DEBUG: {len(rows)} registros encontrados")  # <-- LINHA ADICIONADA
-
         registros = []
         for row in rows:
             reg = dict(row)
             for key, value in reg.items():
-                if isinstance(value, timedelta):
+                if isinstance(value, (timedelta,)):
                     reg[key] = str(value)
+                elif hasattr(value, 'isoformat'):  # Para date, time, datetime
+                    reg[key] = value.isoformat()
+                elif isinstance(value, bytes):
+                    reg[key] = value.decode('utf-8')
             registros.append(reg)
 
         return jsonify({'registros': registros})
     except Exception as e:
-        print(f"❌ ERRO: {e}")  # <-- LINHA ADICIONADA
+        print(f"❌ ERRO: {e}")
         return jsonify({'registros': [], 'erro': str(e)}), 500
-
-
+        
 @app.route('/registros_com_horarios', methods=['GET'])
 def listar_registros_com_horarios():
     try:
