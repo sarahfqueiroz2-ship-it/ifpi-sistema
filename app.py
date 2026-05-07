@@ -320,19 +320,21 @@ def listar_registros():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM registros ORDER BY data DESC")
-        registros = cursor.fetchall()
+        cursor.execute("SELECT * FROM registros")
+        rows = cursor.fetchall()
         conn.close()
-        
-        # Converte timedelta para string
-        for reg in registros:
-            for key, value in dict(reg).items():
+
+        registros = []
+        for row in rows:
+            reg = dict(row)
+            for key, value in reg.items():
                 if isinstance(value, timedelta):
                     reg[key] = str(value)
-        
+            registros.append(reg)
+
         return jsonify({'registros': registros})
     except Exception as e:
-        print("Erro:", str(e))
+        print(f"Erro: {e}")
         return jsonify({'registros': []}), 200
 
 
