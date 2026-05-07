@@ -318,38 +318,21 @@ def login():
 @app.route('/registros', methods=['GET'])
 def listar_registros():
     try:
-        professor_id = request.args.get('professor_id')
-
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        if professor_id:
-            cursor.execute("""
-                SELECT r.*, c.nome as curso_nome
-                FROM registros r
-                JOIN cursos c ON r.curso_id = c.id
-                WHERE r.professor_id = %s
-                ORDER BY r.data DESC
-            """, (professor_id,))
-        else:
-            cursor.execute("""
-                SELECT r.*, c.nome as curso_nome, u.nome_completo as professor_nome
-                FROM registros r
-                JOIN cursos c ON r.curso_id = c.id
-                JOIN professores p ON r.professor_id = p.id
-                JOIN usuarios u ON p.usuario_id = u.id
-                ORDER BY r.data DESC
-            """)
-
+        cursor.execute("SELECT * FROM registros ORDER BY data DESC")
         registros = cursor.fetchall()
         conn.close()
-
-        registros_serializaveis = [serializar_registro(reg) for reg in registros]
-        return jsonify({'registros': registros_serializaveis})
-
+        
+        # Converte timedelta para string
+        for reg in registros:
+            for key, value in dict(reg).items():
+                if isinstance(value, timedelta):
+                    reg[key] = str(value)
+        
+        return jsonify({'registros': registros})
     except Exception as e:
-        print("Erro ao listar registros:", str(e))
-        traceback.print_exc()
+        print("Erro:", str(e))
         return jsonify({'registros': []}), 200
 
 
