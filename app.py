@@ -324,6 +324,8 @@ def listar_registros():
         rows = cursor.fetchall()
         conn.close()
 
+        print(f"🔍 DEBUG: {len(rows)} registros encontrados")  # <-- LINHA ADICIONADA
+
         registros = []
         for row in rows:
             reg = dict(row)
@@ -334,8 +336,8 @@ def listar_registros():
 
         return jsonify({'registros': registros})
     except Exception as e:
-        print(f"Erro: {e}")
-        return jsonify({'registros': []}), 200
+        print(f"❌ ERRO: {e}")  # <-- LINHA ADICIONADA
+        return jsonify({'registros': [], 'erro': str(e)}), 500
 
 
 @app.route('/registros_com_horarios', methods=['GET'])
