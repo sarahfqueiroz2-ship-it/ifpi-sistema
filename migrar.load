@@ -1,0 +1,14 @@
+LOAD DATABASE
+     FROM mysql://root:ifpi2026@localhost:3306/ifpi_aulas
+     INTO postgresql://ifpi_user:dJZKgKnWJVM2GZzG32tA61HbVLXvNF4c@dpg-d7sfrr77f7vs73d8r0gg-a.virginia-postgres.render.com/ifpi_aulas_kdt1
+
+WITH include drop, create tables, create indexes, reset sequences,
+     workers = 8, concurrency = 1,
+     multiple readers per thread, rows per range = 50000
+
+SET maintenance_work_mem = '128MB',
+    work_mem = '12MB'
+
+CAST type datetime to timestamptz drop default drop not null using zero-dates-to-null,
+     type date drop not null drop default,
+     type tinyint to boolean using tinyint-to-boolean;
