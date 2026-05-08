@@ -438,6 +438,9 @@ def criar_registro():
     try:
         data = request.json
 
+        if 'id' in data:
+    del data['id']
+    
         campos_obrigatorios = ['professor_id', 'data', 'tipo', 'curso_id', 'serie', 'quantidade', 'disciplina']
         for campo in campos_obrigatorios:
             if campo not in data or data[campo] == '':
