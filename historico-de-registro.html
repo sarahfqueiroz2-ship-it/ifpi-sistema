@@ -1073,7 +1073,38 @@ function logout() {
 
 
     // ================== FUNÇÕES DO HISTÓRICO ==================
-    // ================== FUNÇÕES DO HISTÓRICO ==================
+    function formatarData(data) {
+    if (!data) return 'Data inválida';
+    try {
+        if (typeof data === 'string' && data.includes(',')) {
+            const partes = data.split(' ');
+            if (partes.length >= 4) {
+                const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+                return `${partes[1]}/${meses[partes[2]]}/${partes[3]}`;
+            }
+        } else if (typeof data === 'string' && data.includes('-')) {
+            const partes = data.split('T')[0].split('-');
+            if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+    } catch(e) {}
+    return 'Data inválida';
+}
+
+function formatarDataParaInput(data) {
+    if (!data) return '';
+    try {
+        if (typeof data === 'string' && data.includes(',')) {
+            const partes = data.split(' ');
+            if (partes.length >= 4) {
+                const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
+                return `${partes[3]}-${meses[partes[2]]}-${partes[1].padStart(2, '0')}`;
+            }
+        } else if (typeof data === 'string' && data.includes('-')) {
+            return data.split('T')[0];
+        }
+    } catch(e) {}
+    return '';
+}
     
     async function carregarRegistros() {
         try {
