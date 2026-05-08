@@ -438,7 +438,6 @@ def criar_registro():
     try:
         data = request.json
 
-               data.pop('id', None)
 
     
         campos_obrigatorios = ['professor_id', 'data', 'tipo', 'curso_id', 'serie', 'quantidade', 'disciplina']
