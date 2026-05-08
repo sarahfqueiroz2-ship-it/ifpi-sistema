@@ -962,25 +962,37 @@ if (editId) {
     fetch(`${API}/registros/${editId}`)
         .then(res => res.json())
         .then(data => {
-            if (data.registro) {
-                const reg = data.registro;
-                document.getElementById('data').value = reg.data.split('T')[0];
-                document.querySelector(`input[name="registro"][value="${reg.tipo}"]`).checked = true;
-                document.getElementById('professorSelecionado').value = reg.professor_id;
-                document.getElementById('curso').value = reg.curso_id;
-                document.getElementById('serie').value = reg.serie;
-                document.getElementById('quantidade').value = reg.quantidade;
-                document.getElementById('disciplina').value = reg.disciplina;
-                document.getElementById('observacoes').value = reg.observacoes || '';
-                document.getElementById('tipoProfessor').value = reg.tipo_professor || '';
+            // Ajuste aqui: pode ser data.registro ou data direto
+            const reg = data.registro || data;
+            if (reg && reg.id) {
+                document.getElementById('data').value = reg.data ? reg.data.split('T')[0] : '';
                 
-                const horarios = reg.horarios ? reg.horarios.split(', ') : [];
+                // Marcar o radio do tipo
+                const radio = document.querySelector(`input[name="registro"][value="${reg.tipo}"]`);
+                if (radio) radio.checked = true;
+                
+                document.getElementById('professorSelecionado').value = reg.professor_id || '';
+                document.getElementById('curso').value = reg.curso_id || '';
+                document.getElementById('serie').value = reg.serie || '';
+                document.getElementById('quantidade').value = reg.quantidade || '1';
+                document.getElementById('disciplina').value = reg.disciplina || '';
+                document.getElementById('observacoes').value = reg.observacoes || '';
+                document.getElementById('tipoProfessor').value = reg.tipo_professor || 'Base Comum';
+                
+                // Marcar horários
+                const horarios = reg.horarios ? (Array.isArray(reg.horarios) ? reg.horarios : reg.horarios.split(', ')) : [];
                 document.querySelectorAll('input[name="horarios"]').forEach(cb => {
                     cb.checked = horarios.includes(cb.value);
                 });
+            } else {
+                console.error('Registro não encontrado');
+                alert('Erro ao carregar dados do registro');
             }
         })
-        .catch(err => console.error('Erro ao carregar registro:', err));
+        .catch(err => {
+            console.error('Erro ao carregar registro:', err);
+            alert('Erro ao carregar dados para edição');
+        });
 }
 
         // Detectar tipo de professor
