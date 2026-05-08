@@ -377,8 +377,15 @@
 /* Container da tabela com rolagem horizontal */
 .table-container {
     overflow-x: auto;
-    width: 100%;
+    overflow-y: visible;
+    scroll-behavior: smooth;
 }
+
+        /* Garantir que a rolagem comece no início */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
 
         table {
             width: 100%;
@@ -675,6 +682,13 @@
             }
         }
 
+        
+        
+        
+.table-container {
+    scrollbar-width: thin;
+}
+        
 /* Tabela com largura mínima para forçar rolagem */
 #tabelaRegistros {
     width: 100%;
@@ -1242,7 +1256,12 @@ function formatarDataParaInput(data) {
         document.getElementById('tipoFiltro').addEventListener('change', filtrar);
         document.getElementById('cursoFiltro').addEventListener('change', filtrar);
         
-        
+         setTimeout(() => {
+        const container = document.querySelector('.table-container');
+        if (container) {
+            container.scrollLeft = 0;
+        }
+    }, 200);
     });
 </script>
 </body>
