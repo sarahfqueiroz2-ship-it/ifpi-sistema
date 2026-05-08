@@ -1649,6 +1649,18 @@ def get_registro(id):
             return jsonify({'error': 'Registro não encontrado'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/resetar-seq', methods=['GET'])
+def resetar_sequencia():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT setval('registros_id_seq', (SELECT max(id) FROM registros));")
+        conn.commit()
+        conn.close()
+        return "✅ Sequência resetada com sucesso! Agora você pode cadastrar novos registros."
+    except Exception as e:
+        return f"❌ Erro: {e}"
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
