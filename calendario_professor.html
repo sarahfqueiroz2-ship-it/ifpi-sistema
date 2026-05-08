@@ -799,6 +799,7 @@
     let modalData = null;
     let todosRegistrosProfessor = [];
 
+    const API = 'https://ifpi-sistema.onrender.com';
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
     const menuToggle = document.getElementById('menuToggle');
@@ -890,22 +891,31 @@
     }
 
     async function carregarRegistrosProfessor() {
-        if (!professorId) {
-            console.log('Professor ID não disponível, aguardando...');
-            return;
+    if (!professorId) {
+        console.log('Professor ID não disponível, aguardando...');
+        return;
+    }
+    
+    try {
+        console.log('Buscando registros para professor ID:', professorId);
+        const response = await fetch(`${API}/registros?professor_id=${professorId}`);
+        const data = await response.json();
+        
+        // Filtro de segurança extra
+        let registros = data.registros || [];
+        if (professorId) {
+            registros = registros.filter(r => r.professor_id == professorId);
         }
         
-        try {
-            console.log('Buscando registros para professor ID:', professorId);
-            const response = await fetch(`/registros?professor_id=${professorId}`);
-            const data = await response.json();
-            todosRegistrosProfessor = data.registros || [];
-            console.log('Registros encontrados:', todosRegistrosProfessor.length);
-            filtrarResumo();
-        } catch (error) {
-            console.error('Erro ao carregar registros:', error);
-        }
+        todosRegistrosProfessor = registros;
+        console.log('Registros encontrados (apenas do professor):', todosRegistrosProfessor.length);
+        filtrarResumo();
+    } catch (error) {
+        console.error('Erro ao carregar registros:', error);
+        todosRegistrosProfessor = [];
+        filtrarResumo();
     }
+}
 
     function filtrarResumo() {
         const cursoFiltro = document.getElementById('filtroCursoResumo')?.value.toLowerCase() || '';
