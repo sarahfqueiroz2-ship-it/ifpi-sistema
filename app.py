@@ -556,7 +556,13 @@ def deletar_registro(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Primeiro, excluir os horários relacionados
+        cursor.execute("DELETE FROM registro_horarios WHERE registro_id = %s", (id,))
+        
+        # Depois, excluir o registro
         cursor.execute("DELETE FROM registros WHERE id = %s", (id,))
+        
         conn.commit()
         conn.close()
         return jsonify({'success': True})
