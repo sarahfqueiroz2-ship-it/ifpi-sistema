@@ -1509,13 +1509,14 @@ def recuperar_enviar_codigo():
         codigo = gerar_codigo()
         expira_em = datetime.now() + timedelta(minutes=5)
         
+        # TABELA CORRIGIDA PARA POSTGRESQL (SEM AUTO_INCREMENT)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS recuperacao_senha (
-                id INT PRIMARY KEY AUTO_INCREMENT,
+                id SERIAL PRIMARY KEY,
                 email VARCHAR(100) NOT NULL,
                 codigo VARCHAR(10) NOT NULL,
-                expira_em DATETIME NOT NULL,
-                usado BOOLEAN DEFAULT 0,
+                expira_em TIMESTAMP NOT NULL,
+                usado INTEGER DEFAULT 0,
                 criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
