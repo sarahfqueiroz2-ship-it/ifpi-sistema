@@ -347,33 +347,36 @@
             border-color: var(--verde-principal);
         }
 
-        /* Table Card */
-      .table-card {
+  /* Table Card */
+.table-card {
     background-color: var(--branco);
     border: 1px solid var(--cinza-borda);
     border-radius: 8px;
     overflow: hidden;
 }
-        .table-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--cinza-borda);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
 
-        .table-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--cinza-texto);
-        }
+.table-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--cinza-borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
-        .table-count {
-            font-size: 14px;
-            color: var(--cinza-secundario);
-        }
+.table-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cinza-texto);
+}
 
-   .table-container {
+.table-count {
+    font-size: 14px;
+    color: var(--cinza-secundario);
+}
+
+/* Container da tabela com rolagem horizontal */
+.table-container {
+    overflow-x: auto;
     width: 100%;
 }
 
@@ -672,28 +675,32 @@
             }
         }
 
- #tabelaRegistros {
+/* Tabela com largura mínima para forçar rolagem */
+#tabelaRegistros {
     width: 100%;
-    min-width: unset;
+    min-width: 1200px;
     border-collapse: collapse;
 }
-        
-#tabelaRegistros thead {
-    display: none; 
-}
-#tabelaRegistros tbody tr {
-    display: block;
-    overflow-x: auto;
+
+#tabelaRegistros td, 
+#tabelaRegistros th {
     white-space: nowrap;
-    border-bottom: 1px solid var(--cinza-borda);
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    padding: 12px 16px;
 }
+
+/* Remove as regras que estão quebrando a tabela */
+#tabelaRegistros thead {
+    display: table-header-group; /* Volta ao normal */
+}
+
+#tabelaRegistros tbody tr {
+    display: table-row; /* Volta ao normal */
+    overflow: visible;
+}
+
 #tabelaRegistros tbody td {
-    display: inline-block;
-    vertical-align: middle;
-    border-bottom: none;
-    padding: 14px 16px;
+    display: table-cell; /* Volta ao normal */
+    border-bottom: 1px solid var(--cinza-borda);
 }
 #tabelaRegistros tbody tr::-webkit-scrollbar {
     height: 4px;
