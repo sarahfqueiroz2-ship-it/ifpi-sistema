@@ -748,7 +748,13 @@
 
 
 
+html {
+    scroll-behavior: auto !important;
+}
 
+body {
+    overflow: visible !important;
+}
 
     </style>
 </head>
@@ -1276,13 +1282,25 @@ function formatarDataParaInput(data) {
         document.getElementById('cursoFiltro').addEventListener('change', filtrar);
         
        
-// Mostrar a barra de rolagem desde o início
+// Força a página a começar no topo absoluto
 setTimeout(function() {
-    var container = document.querySelector('.table-container');
+    // Rola a página para o topo
+    window.scrollTo({
+        top: 0,
+        behavior: "instant"
+    });
+    
+    // Rola o container da tabela para a esquerda (horizontal)
+    const container = document.querySelector('.table-container');
     if (container) {
         container.scrollLeft = 0;
     }
-}, 100);
+}, 10);
+
+// Também no evento de carregamento da tabela
+window.addEventListener('load', function() {
+    window.scrollTo(0, 0);
+});
         
     });
 </script>
