@@ -1092,92 +1092,28 @@ function formatarDataParaInput(data) {
     window.location.href = `formulario.html?edit_id=${id}`;
 }
 
-    // Evento do formulário de edição
-    document.getElementById('formEdicao').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('editId').value;
-        const data = document.getElementById('editData').value;
-        const tipo = document.getElementById('editTipo').value;
-        const cursoId = document.getElementById('editCurso').value;
-        const serie = document.getElementById('editSerie').value;
-        const quantidade = document.getElementById('editQuantidade').value;
-        const horarioInicio = document.getElementById('editHorarioInicio').value;
-        const disciplina = document.getElementById('editDisciplina').value;
-        const observacoes = document.getElementById('editObservacoes').value;
-        
-        if (!cursoId) { alert('Selecione um curso!'); return; }
-        
-        const [hora, minuto] = horarioInicio.split(':');
-        const horaFim = parseInt(hora) + parseInt(quantidade);
-        const horaFimAjustada = horaFim >= 24 ? 23 : horaFim;
-        const horarioFim = `${String(horaFimAjustada).padStart(2,'0')}:${minuto}:00`;
-        
-        const payload = { 
-            data, 
-            tipo, 
-            curso_id: parseInt(cursoId), 
-            serie, 
-            quantidade: parseInt(quantidade), 
-            horario_inicio: horarioInicio + ':00', 
-            horario_fim: horarioFim, 
-            disciplina, 
-            observacoes 
-        };
-        
-        try {
-            const response = await fetch(`${API}/registros/${id}`, { 
-                method: 'PUT', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(payload) 
-            });
-            const result = await response.json();
-            if (result.success) { 
-                alert('Registro atualizado com sucesso!'); 
-                fecharModalEdicao(); 
-                carregarRegistros(); 
-            } else {
-                alert('Erro ao atualizar registro: ' + (result.message || 'Erro desconhecido'));
-            }
-        } catch(error) { 
-            console.error('Erro:', error); 
-            alert('Erro ao conectar com o servidor.'); 
-        }
-    });
+    
 
 
-async function carregarProfessoresSelect(professorSelecionado = null) {
-    try {
-        const response = await fetch(`${API}/professores_lista`);
-        const data = await response.json();
-        const select = document.getElementById('editProfessor');
-        select.innerHTML = '<option value="">Selecione um professor</option>';
-        if (data.professores) {
-            data.professores.forEach(prof => {
-                const option = document.createElement('option');
-                option.value = prof.id;
-                option.textContent = prof.nome;
-                if (professorSelecionado && prof.id === professorSelecionado) option.selected = true;
-                select.appendChild(option);
-            });
-        }
-    } catch(error) {
-        console.error('Erro ao carregar professores:', error);
-    }
-}
 
-    function fecharModalEdicao() { document.getElementById('modalEdicao').classList.remove('active'); }
 
     async function excluir(id) {
         if (!confirm('Tem certeza que deseja excluir este registro?')) return;
         try {
             const resp = await fetch(`${API}/registros/${id}`, { method: 'DELETE' });
             const data = await resp.json();
-            if (data.success) { alert('Registro excluído com sucesso!'); carregarRegistros(); }
-            else alert('Erro ao excluir registro!');
-        } catch(err) { alert('Erro ao conectar com o servidor!'); }
+            if (data.success) { 
+                alert('Registro excluído com sucesso!'); 
+                carregarRegistros(); 
+            } else {
+                alert('Erro ao excluir registro!');
+            }
+        } catch(err) { 
+            alert('Erro ao conectar com o servidor!'); 
+        }
     }
 
-    function limparFiltros() {
+  function limparFiltros() {
         document.getElementById('dataInicio').value = '';
         document.getElementById('dataFim').value = '';
         document.getElementById('tipoFiltro').value = '';
@@ -1192,7 +1128,11 @@ async function carregarProfessoresSelect(professorSelecionado = null) {
         const tipo = document.getElementById('tipoFiltro').value;
         const curso = document.getElementById('cursoFiltro').value;
 
-        if (!todosRegistros || todosRegistros.length === 0) { renderizarTabela([]); atualizarContadores([]); return; }
+        if (!todosRegistros || todosRegistros.length === 0) { 
+            renderizarTabela([]); 
+            atualizarContadores([]); 
+            return; 
+        }
 
         const filtrados = todosRegistros.filter(r => {
             if (dataInicio && r.data) {
@@ -1215,16 +1155,15 @@ async function carregarProfessoresSelect(professorSelecionado = null) {
             if (curso) {
                 const cursoNome = r.curso_nome ? r.curso_nome.toLowerCase() : '';
                 const cursoFiltro = curso.toLowerCase();
+                // Filtro simplificado
                 if (cursoFiltro === 'tecnico-informatica' && !cursoNome.includes('informática')) return false;
                 if (cursoFiltro === 'tecnico-administracao' && !cursoNome.includes('administração')) return false;
                 if (cursoFiltro === 'tecnico-meio-ambiente' && !cursoNome.includes('meio ambiente')) return false;
                 if (cursoFiltro === 'gastronomia' && !cursoNome.includes('gastronomia')) return false;
-                if (cursoFiltro === 'gastronomia-proeja' && !(cursoNome.includes('gastronomia') && cursoNome.includes('proeja'))) return false;
-                if (cursoFiltro === 'restaurante-bar' && !(cursoNome.includes('restaurante') && cursoNome.includes('bar'))) return false;
-                if (cursoFiltro === 'licenciatura-biologia' && !(cursoNome.includes('licenciatura') && cursoNome.includes('biológica'))) return false;
-                if (cursoFiltro === 'bacharelado-administracao' && !(cursoNome.includes('bacharelado') && cursoNome.includes('administração'))) return false;
-                if (cursoFiltro === 'tecnologo-marketing' && !(cursoNome.includes('tecnólogo') && cursoNome.includes('marketing'))) return false;
-                if (cursoFiltro === 'tecnologo-ads' && !(cursoNome.includes('tecnólogo') && cursoNome.includes('análise'))) return false;
+                if (cursoFiltro === 'licenciatura-biologia' && !cursoNome.includes('biológica')) return false;
+                if (cursoFiltro === 'bacharelado-administracao' && !cursoNome.includes('administração')) return false;
+                if (cursoFiltro === 'tecnologo-marketing' && !cursoNome.includes('marketing')) return false;
+                if (cursoFiltro === 'tecnologo-ads' && !cursoNome.includes('análise')) return false;
             }
             return true;
         });
@@ -1233,26 +1172,8 @@ async function carregarProfessoresSelect(professorSelecionado = null) {
         atualizarContadores(filtrados);
     }
 
-    async function carregarCursosSelect(cursoSelecionado = null) {
-    try {
-        const response = await fetch(`${API}/cursos`);
-        const data = await response.json();
-        const select = document.getElementById('editCurso');
-        if (select) {
-            select.innerHTML = '<option value="">Selecione um curso</option>';
-            data.cursos.forEach(curso => {
-                const option = document.createElement('option');
-                option.value = curso.id;
-                option.textContent = curso.nome;
-                if (cursoSelecionado && curso.id === cursoSelecionado) option.selected = true;
-                select.appendChild(option);
-            });
-        }
-    } catch(error) {
-        console.error('Erro ao carregar cursos:', error);
-    }
-}
 
+    
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
         // Gerar o menu
