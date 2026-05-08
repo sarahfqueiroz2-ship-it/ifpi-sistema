@@ -32,6 +32,7 @@
             color: var(--cinza-texto);
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
+            overflow-x: auto !important;
         }
 
         /* Sidebar */
@@ -376,12 +377,8 @@
 
 /* Container da tabela com rolagem horizontal */
 .table-container {
-    overflow-x: auto;
-    overflow-y: auto;
-    width: 100%;
-    direction: ltr;
+    scroll-behavior: auto !important;
 }
-
         /* Garantir que a rolagem comece no início */
 .table-container::-webkit-scrollbar {
     height: 8px;
@@ -692,10 +689,8 @@
         
 /* Tabela com largura mínima para forçar rolagem */
 #tabelaRegistros {
-    width: max-content;
-    min-width: 100%;
-    border-collapse: collapse;
-    direction: ltr;
+    width: max-content !important;
+    min-width: 100% !important;
 }
 
 #tabelaRegistros th,
@@ -1257,12 +1252,12 @@ function formatarDataParaInput(data) {
         document.getElementById('tipoFiltro').addEventListener('change', filtrar);
         document.getElementById('cursoFiltro').addEventListener('change', filtrar);
         
-         setTimeout(() => {
-        const container = document.querySelector('.table-container');
-        if (container) {
-            container.scrollLeft = 0;
-        }
-    }, 200);
+        setTimeout(function() {
+    var containers = document.querySelectorAll('.table-container');
+    for (var i = 0; i < containers.length; i++) {
+        containers[i].scrollLeft = 0;
+    }
+}, 100);
     });
 </script>
 </body>
