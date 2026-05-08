@@ -898,32 +898,68 @@ document.addEventListener('DOMContentLoaded', function() {
     editId = urlParams.get('edit_id');
     
     if (editId) {
-        document.querySelector('.page-title').textContent = 'Editar Registro';
-        document.querySelector('.btn-primary').textContent = 'Atualizar Registro';
-        
-        fetch(`${API}/registros/${editId}`)
-            .then(res => res.json())
-            .then(data => {
-                const reg = data.registro;
-                if (reg && reg.id) {
-                    document.getElementById('data').value = reg.data ? reg.data.split('T')[0] : '';
-                    const radio = document.querySelector(`input[name="registro"][value="${reg.tipo}"]`);
-                    if (radio) radio.checked = true;
-                    document.getElementById('professorSelecionado').value = reg.professor_id || '';
-                    document.getElementById('curso').value = reg.curso_id || '';
-                    document.getElementById('serie').value = reg.serie || '';
-                    document.getElementById('quantidade').value = reg.quantidade || '1';
-                    document.getElementById('disciplina').value = reg.disciplina || '';
-                    document.getElementById('observacoes').value = reg.observacoes || '';
-                    document.getElementById('tipoProfessor').value = reg.tipo_professor || 'Base Comum';
-                    const horarios = reg.horarios ? (Array.isArray(reg.horarios) ? reg.horarios : reg.horarios.split(', ')) : [];
-                    document.querySelectorAll('input[name="horarios"]').forEach(cb => {
-                        cb.checked = horarios.includes(cb.value);
-                    });
+    document.querySelector('.page-title').textContent = 'Editar Registro';
+    document.querySelector('.btn-primary').textContent = 'Atualizar Registro';
+    
+    fetch(`${API}/registros/${editId}`)
+        .then(res => res.json())
+        .then(data => {
+            const reg = data.registro;
+            if (reg && reg.id) {
+                // Data
+                document.getElementById('data').value = reg.data ? reg.data.split('T')[0] : '';
+                
+                // Tipo de registro
+                const radio = document.querySelector(`input[name="registro"][value="${reg.tipo}"]`);
+                if (radio) radio.checked = true;
+                
+                // Professor
+                if (reg.professor_id) {
+                    // Aguarda o select carregar e depois seleciona
+                    setTimeout(() => {
+                        document.getElementById('professorSelecionado').value = reg.professor_id;
+                    }, 500);
                 }
-            })
-            .catch(err => console.error('Erro ao carregar registro:', err));
-    }
+                
+                // Curso
+                if (reg.curso_id) {
+                    setTimeout(() => {
+                        document.getElementById('curso').value = reg.curso_id;
+                    }, 500);
+                }
+                
+                // Série
+                document.getElementById('serie').value = reg.serie || '';
+                
+                // Quantidade
+                document.getElementById('quantidade').value = reg.quantidade || '1';
+                
+                // Disciplina
+                document.getElementById('disciplina').value = reg.disciplina || '';
+                
+                // Observações
+                document.getElementById('observacoes').value = reg.observacoes || '';
+                
+                // Tipo professor
+                document.getElementById('tipoProfessor').value = reg.tipo_professor || 'Base Comum';
+                
+                // Horários - verifica se veio no formato correto
+                let horarios = [];
+                if (reg.horarios && typeof reg.horarios === 'string') {
+                    horarios = reg.horarios.split(', ');
+                } else if (reg.horarios && Array.isArray(reg.horarios)) {
+                    horarios = reg.horarios;
+                }
+                
+                document.querySelectorAll('input[name="horarios"]').forEach(cb => {
+                    cb.checked = horarios.includes(cb.value);
+                });
+                
+                console.log('Registro carregado:', reg);
+            }
+        })
+        .catch(err => console.error('Erro ao carregar registro:', err));
+}
     
     const disciplinaInput = document.getElementById('disciplina');
     const tipoProfessorInput = document.getElementById('tipoProfessor');
