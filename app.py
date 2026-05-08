@@ -1623,7 +1623,29 @@ def gerar_codigo():
     import random
     import string
     return ''.join(random.choices(string.digits, k=6))
-    
+
+
+@app.route('/registros/<int:id>', methods=['GET'])
+def get_registro(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM registros WHERE id = %s", (id,))
+        registro = cursor.fetchone()
+        conn.close()
+        
+        if registro:
+            # Converter tipos não serializáveis
+            for key, value in registro.items():
+                if hasattr(value, 'total_seconds'):  # timedelta
+                    registro[key] = str(value)
+                elif hasattr(value, 'strftime'):  # date/datetime
+                    registro[key] = value.isoformat()
+            return jsonify({'registro': registro})
+        else:
+            return jsonify({'error': 'Registro não encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
