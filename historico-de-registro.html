@@ -455,7 +455,7 @@
 }
 
 .btn-icon {
-    padding: 6px 10px;
+    padding: 6px 12px;
     background-color: transparent;
     border: 1px solid var(--cinza-borda);
     border-radius: 4px;
@@ -464,6 +464,8 @@
     align-items: center;
     justify-content: center;
     min-width: 32px;
+        font-size: 13px;
+
 }
 
         .btn-icon:hover {
@@ -670,6 +672,16 @@
                 align-items: flex-start;
             }
         }
+
+        #tabelaRegistros {
+    width: 100%;
+    min-width: 1200px;
+}
+
+#tabelaRegistros td, 
+#tabelaRegistros th {
+    white-space: nowrap;
+}
     </style>
 </head>
 <body>
@@ -1061,6 +1073,7 @@ function logout() {
 
 
     // ================== FUNÇÕES DO HISTÓRICO ==================
+    // ================== FUNÇÕES DO HISTÓRICO ==================
     
     async function carregarRegistros() {
         try {
@@ -1076,7 +1089,7 @@ function logout() {
                 renderizarTabela(todosRegistros);
                 atualizarContadores(todosRegistros);
             } else {
-                document.querySelector('#tabelaRegistros tbody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">Nenhum registro encontrado.<\/td><\/tr>';
+                document.querySelector('#tabelaRegistros tbody').innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">Nenhum registro encontrado.</td></tr>';
                 document.getElementById('totalRegistros').textContent = '0';
                 document.getElementById('totalAntecipacoes').textContent = '0';
                 document.getElementById('totalReposicoes').textContent = '0';
@@ -1085,216 +1098,140 @@ function logout() {
             }
         } catch(err) {
             console.error('Erro ao carregar registros:', err);
-            document.querySelector('#tabelaRegistros tbody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">Erro ao carregar registros.<\/td><\/tr>';
+            document.querySelector('#tabelaRegistros tbody').innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">Erro ao carregar registros.</td></tr>';
         }
-    }
-
-    function atualizarContadores(registros) {
-        let totalAulas = 0, antecipacoes = 0, reposicoes = 0, ausencias = 0;
-        if (registros && registros.length > 0) {
-            registros.forEach(r => {
-                const qtd = r.quantidade || 0;
-                totalAulas += qtd;
-                const tipo = r.tipo ? r.tipo.toLowerCase() : '';
-                if (tipo === 'antecipacao' || tipo === 'antecipação') antecipacoes += qtd;
-                else if (tipo === 'reposicao' || tipo === 'reposição') reposicoes += qtd;
-                else if (tipo === 'ausencia' || tipo === 'ausência') ausencias += qtd;
-            });
-        }
-        document.getElementById('totalRegistros').textContent = totalAulas;
-        document.getElementById('totalAntecipacoes').textContent = antecipacoes;
-        document.getElementById('totalReposicoes').textContent = reposicoes;
-        document.getElementById('totalAusencias').textContent = ausencias;
-        document.getElementById('registrosEncontrados').textContent = `${registros ? registros.length : 0} registro(s) encontrado(s)`;
-    }
-
-    function formatarData(data) {
-        if (!data) return 'Data inválida';
-        try {
-            if (typeof data === 'string' && data.includes(',')) {
-                const partes = data.split(' ');
-                if (partes.length >= 4) {
-                    const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
-                    return `${partes[1]}/${meses[partes[2]]}/${partes[3]}`;
-                }
-            } else if (typeof data === 'string' && data.includes('-')) {
-                const partes = data.split('T')[0].split('-');
-                if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
-            }
-        } catch(e) {}
-        return 'Data inválida';
-    }
-
-    function formatarDataParaInput(data) {
-        if (!data) return '';
-        try {
-            if (typeof data === 'string' && data.includes(',')) {
-                const partes = data.split(' ');
-                if (partes.length >= 4) {
-                    const meses = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
-                    return `${partes[3]}-${meses[partes[2]]}-${partes[1].padStart(2, '0')}`;
-                }
-            } else if (typeof data === 'string' && data.includes('-')) {
-                return data.split('T')[0];
-            }
-        } catch(e) {}
-        return '';
     }
 
     function renderizarTabela(registros) {
         const tbody = document.querySelector('#tabelaRegistros tbody');
         tbody.innerHTML = '';
         if (!registros || registros.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">Nenhum registro encontrado.<\/td><\/tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">Nenhum registro encontrado.</td></tr>';
             return;
         }
 
-        const gruposMap = new Map();
         registros.forEach(reg => {
-            const professor = reg.professor_nome || 'Professor não informado';
-            const curso = reg.curso_nome || 'Curso não informado';
-            const serie = reg.serie || 'Série não informada';
-            const disciplina = reg.disciplina || 'Disciplina não informada';
-            const chave = `${professor}|${curso}|${serie}|${disciplina}`;
-            if (!gruposMap.has(chave)) {
-                gruposMap.set(chave, { professor, curso, serie, disciplina, registros: [], totalAulas: 0, antecipadas: 0, reposicoes: 0, ausencias: 0 });
-            }
-            const grupo = gruposMap.get(chave);
-            grupo.registros.push(reg);
-            const qtd = reg.quantidade || 0;
-            grupo.totalAulas += qtd;
+            const dataFormatada = formatarData(reg.data);
+            let tipoDisplay = reg.tipo, classeBadge = '';
             const tipo = reg.tipo ? reg.tipo.toLowerCase() : '';
-            if (tipo === 'antecipacao' || tipo === 'antecipação') grupo.antecipadas += qtd;
-            else if (tipo === 'reposicao' || tipo === 'reposição') grupo.reposicoes += qtd;
-            else if (tipo === 'ausencia' || tipo === 'ausência') grupo.ausencias += qtd;
-        });
+            if (tipo === 'reposicao' || tipo === 'reposição') { tipoDisplay = 'Reposição'; classeBadge = 'reposicao'; }
+            else if (tipo === 'antecipacao' || tipo === 'antecipação') { tipoDisplay = 'Antecipação'; classeBadge = 'antecipacao'; }
+            else if (tipo === 'ausencia' || tipo === 'ausência') { tipoDisplay = 'Ausência'; classeBadge = 'ausencia'; }
 
-        gruposMap.forEach(grupo => {
-            const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
-            let statusClass = '', statusTexto = '';
-            if (saldo > 0) { statusClass = 'success'; statusTexto = `${saldo} aula(s) adiantada(s)`; }
-            else if (saldo < 0) { statusClass = 'danger'; statusTexto = `${Math.abs(saldo)} aula(s) em débito`; }
-            else { statusClass = 'neutral'; statusTexto = 'Carga horária OK'; }
+            let classeTipoProfessor = 'base-comum';
+            let tipoProfessorDisplay = reg.tipo_professor || 'Não definido';
+            if (tipoProfessorDisplay === 'Técnico') classeTipoProfessor = 'tecnico';
+            else if (tipoProfessorDisplay === 'Base Comum') tipoProfessorDisplay = 'Base Comum';
 
-            const headerRow = document.createElement('tr');
-            headerRow.style.backgroundColor = 'var(--cinza-medio)';
-            headerRow.innerHTML = `
-                <td colspan="10" style="padding: 16px 24px; background-color: var(--cinza-medio);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                        <div style="font-weight: 600;">
-                            <span style="font-size: 15px;"><strong>${grupo.professor}</strong> - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}</span>
-                        </div>
-                        <div style="display: flex; gap: 20px; align-items: center;">
-                            <span style="font-size: 13px; color: var(--cinza-secundario);">
-                                Total: ${grupo.totalAulas} | Antecipadas: ${grupo.antecipadas} | Reposições: ${grupo.reposicoes} | Ausências: ${grupo.ausencias}
-                            </span>
-                            <span class="badge ${statusClass}" style="font-size: 13px; padding: 6px 12px;">${statusTexto}</span>
-                        </div>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="white-space: nowrap;">${reg.id}</td>
+                <td style="white-space: nowrap;">${reg.professor_nome || '-'}</td>
+                <td style="white-space: nowrap;">${dataFormatada}</td>
+                <td style="white-space: nowrap;"><span class="badge ${classeBadge}">${tipoDisplay}</span></td>
+                <td style="white-space: nowrap;">${reg.curso_nome || '-'}</td>
+                <td style="white-space: nowrap;">${reg.serie || '-'}</td>
+                <td style="white-space: nowrap;">${reg.quantidade || 0} aulas</td>
+                <td style="white-space: nowrap;"><span class="badge ${classeTipoProfessor}">${tipoProfessorDisplay}</span></td>
+                <td style="white-space: nowrap;">${reg.horarios || '-'}</td>
+                <td style="white-space: nowrap;">${reg.disciplina || '-'}</td>
+                <td style="white-space: nowrap;">
+                    <div class="actions" style="display: flex; gap: 5px; flex-wrap: nowrap;">
+                        <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar" style="padding: 6px 12px; cursor: pointer;">✏️ Editar</button>
+                        <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir" style="padding: 6px 12px; cursor: pointer;">🗑️ Excluir</button>
                     </div>
                 </td>
             `;
-            tbody.appendChild(headerRow);
-
-            grupo.registros.forEach(reg => {
-                const dataFormatada = formatarData(reg.data);
-                let tipoDisplay = reg.tipo, classeBadge = '';
-                const tipo = reg.tipo ? reg.tipo.toLowerCase() : '';
-                if (tipo === 'reposicao' || tipo === 'reposição') { tipoDisplay = 'Reposição'; classeBadge = 'reposicao'; }
-                else if (tipo === 'antecipacao' || tipo === 'antecipação') { tipoDisplay = 'Antecipação'; classeBadge = 'antecipacao'; }
-                else if (tipo === 'ausencia' || tipo === 'ausência') { tipoDisplay = 'Ausência'; classeBadge = 'ausencia'; }
-
-                let classeTipoProfessor = 'base-comum';
-                let tipoProfessorDisplay = reg.tipo_professor || 'Não definido';
-                if (tipoProfessorDisplay === 'Técnico') classeTipoProfessor = 'tecnico';
-                else if (tipoProfessorDisplay === 'Comum') tipoProfessorDisplay = 'Base Comum';
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-<td>${reg.id}</td>
-                    <td>${reg.professor_nome || '-'}</td>
-                    <td>${dataFormatada}</td>
-                    <td><span class="badge ${classeBadge}">${tipoDisplay}</span></td>
-                    <td>${reg.curso_nome || '-'}</td>
-                    <td>${reg.serie || '-'}</td>
-                    <td>${reg.quantidade || 0} aulas</td>
-                    <td><span class="badge ${classeTipoProfessor}">${tipoProfessorDisplay}</span></td>
-<td>${reg.horarios || '-'}</td>
-                    <td>${reg.disciplina || '-'}</td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar">
-                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                                </svg>
-                            </button>
-                            <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir">
-                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            const spacerRow = document.createElement('tr');
-            spacerRow.innerHTML = '<td colspan="10" style="padding: 8px; background-color: transparent;"><\/td><\/tr>';
-            tbody.appendChild(spacerRow);
+            tbody.appendChild(row);
         });
     }
 
-    async function carregarCursosSelect(cursoSelecionado = null) {
+    async function editarRegistro(id) {
         try {
-            const response = await fetch(`${API}/cursos`);
-            const data = await response.json();
-            const select = document.getElementById('editCurso');
-            select.innerHTML = '<option value="">Selecione um curso</option>';
-            data.cursos.forEach(curso => {
-                const option = document.createElement('option');
-                option.value = curso.id;
-                option.textContent = curso.nome;
-                if (cursoSelecionado && curso.id === cursoSelecionado) option.selected = true;
-                select.appendChild(option);
-            });
-        } catch(error) { console.error('Erro ao carregar cursos:', error); }
+            const registro = todosRegistros.find(r => r.id === id);
+            if (!registro) return;
+            
+            document.getElementById('editId').value = registro.id;
+            document.getElementById('editData').value = formatarDataParaInput(registro.data);
+            
+            let tipoValue = registro.tipo ? registro.tipo.toLowerCase() : '';
+            if (tipoValue === 'reposição') tipoValue = 'reposicao';
+            if (tipoValue === 'antecipação') tipoValue = 'antecipacao';
+            if (tipoValue === 'ausência') tipoValue = 'ausencia';
+            document.getElementById('editTipo').value = tipoValue;
+            document.getElementById('editQuantidade').value = registro.quantidade || '1';
+            
+            if (registro.horario_inicio) {
+                const horario = registro.horario_inicio.substring(0,5);
+                document.getElementById('editHorarioInicio').value = horario;
+            }
+            
+            document.getElementById('editDisciplina').value = registro.disciplina || '';
+            document.getElementById('editObservacoes').value = registro.observacoes || '';
+            
+            if (registro.serie) document.getElementById('editSerie').value = registro.serie;
+            
+            await carregarCursosSelect(registro.curso_id);
+            
+            document.getElementById('modalEdicao').classList.add('active');
+        } catch(error) {
+            console.error('Erro ao abrir edição:', error);
+            alert('Erro ao carregar dados para edição.');
+        }
     }
 
-    async function editarRegistro(id) {
-    try {
-        const registro = todosRegistros.find(r => r.id === id);
-        if (!registro) return;
+    // Evento do formulário de edição
+    document.getElementById('formEdicao').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+        const data = document.getElementById('editData').value;
+        const tipo = document.getElementById('editTipo').value;
+        const cursoId = document.getElementById('editCurso').value;
+        const serie = document.getElementById('editSerie').value;
+        const quantidade = document.getElementById('editQuantidade').value;
+        const horarioInicio = document.getElementById('editHorarioInicio').value;
+        const disciplina = document.getElementById('editDisciplina').value;
+        const observacoes = document.getElementById('editObservacoes').value;
         
-        document.getElementById('editId').value = registro.id;
-        document.getElementById('editData').value = formatarDataParaInput(registro.data);
+        if (!cursoId) { alert('Selecione um curso!'); return; }
         
-        let tipoValue = registro.tipo ? registro.tipo.toLowerCase() : '';
-        if (tipoValue === 'reposição') tipoValue = 'reposicao';
-        if (tipoValue === 'antecipação') tipoValue = 'antecipacao';
-        if (tipoValue === 'ausência') tipoValue = 'ausencia';
-        document.getElementById('editTipo').value = tipoValue;
-        document.getElementById('editQuantidade').value = registro.quantidade || '1';
+        const [hora, minuto] = horarioInicio.split(':');
+        const horaFim = parseInt(hora) + parseInt(quantidade);
+        const horaFimAjustada = horaFim >= 24 ? 23 : horaFim;
+        const horarioFim = `${String(horaFimAjustada).padStart(2,'0')}:${minuto}:00`;
         
-        if (registro.horario_inicio) {
-            document.getElementById('editHorarioInicio').value = registro.horario_inicio.substring(0,5);
+        const payload = { 
+            data, 
+            tipo, 
+            curso_id: parseInt(cursoId), 
+            serie, 
+            quantidade: parseInt(quantidade), 
+            horario_inicio: horarioInicio + ':00', 
+            horario_fim: horarioFim, 
+            disciplina, 
+            observacoes 
+        };
+        
+        try {
+            const response = await fetch(`${API}/registros/${id}`, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            });
+            const result = await response.json();
+            if (result.success) { 
+                alert('Registro atualizado com sucesso!'); 
+                fecharModalEdicao(); 
+                carregarRegistros(); 
+            } else {
+                alert('Erro ao atualizar registro: ' + (result.message || 'Erro desconhecido'));
+            }
+        } catch(error) { 
+            console.error('Erro:', error); 
+            alert('Erro ao conectar com o servidor.'); 
         }
-        
-        document.getElementById('editDisciplina').value = registro.disciplina || '';
-        document.getElementById('editObservacoes').value = registro.observacoes || '';
-        if (registro.serie) document.getElementById('editSerie').value = registro.serie;
-        
-        // Carregar cursos
-        await carregarCursosSelect(registro.curso_id);
-        
-        // Carregar professores
-        await carregarProfessoresSelect(registro.professor_id);
-        
-        document.getElementById('modalEdicao').classList.add('active');
-    } catch(error) {
-        console.error('Erro ao abrir edição:', error);
-        alert('Erro ao carregar dados para edição.');
-    }
-}
+    });
+
 
 async function carregarProfessoresSelect(professorSelecionado = null) {
     try {
