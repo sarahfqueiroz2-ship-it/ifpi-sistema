@@ -254,16 +254,16 @@ def criar_tabelas():
     """)
     
     # Tabela recuperacao_senha
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS recuperacao_senha (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(100) NOT NULL,
-            codigo VARCHAR(10) NOT NULL,
-            expira_em TIMESTAMP NOT NULL,
-            usado INTEGER DEFAULT 0,
-            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
+  cursor.execute("""
+    CREATE TABLE IF NOT EXISTS recuperacao_senha (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(100) NOT NULL,
+        codigo VARCHAR(10) NOT NULL,
+        expira_em TIMESTAMP NOT NULL,
+        usado INTEGER DEFAULT 0,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
     
     conn.commit()
     conn.close()
