@@ -1654,13 +1654,11 @@ def resetar_sequencia():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Resetar sequência da tabela registros
         cursor.execute("SELECT setval('registros_id_seq', (SELECT max(id) FROM registros));")
-        # Resetar sequência da tabela registro_horarios
         cursor.execute("SELECT setval('registro_horarios_id_seq', (SELECT max(id) FROM registro_horarios));")
         conn.commit()
         conn.close()
-        return "✅ Sequências resetadas com sucesso! Agora você pode cadastrar novos registros."
+        return "✅ Sequências resetadas com sucesso!"
     except Exception as e:
         return f"❌ Erro: {e}"
 # ================== INICIALIZAÇÃO ==================
