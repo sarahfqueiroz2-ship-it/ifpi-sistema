@@ -1105,6 +1105,25 @@ function formatarDataParaInput(data) {
     } catch(e) {}
     return '';
 }
+
+    function atualizarContadores(registros) {
+    let totalAulas = 0, antecipacoes = 0, reposicoes = 0, ausencias = 0;
+    if (registros && registros.length > 0) {
+        registros.forEach(r => {
+            const qtd = r.quantidade || 0;
+            totalAulas += qtd;
+            const tipo = r.tipo ? r.tipo.toLowerCase() : '';
+            if (tipo === 'antecipacao' || tipo === 'antecipação') antecipacoes += qtd;
+            else if (tipo === 'reposicao' || tipo === 'reposição') reposicoes += qtd;
+            else if (tipo === 'ausencia' || tipo === 'ausência') ausencias += qtd;
+        });
+    }
+    document.getElementById('totalRegistros').textContent = totalAulas;
+    document.getElementById('totalAntecipacoes').textContent = antecipacoes;
+    document.getElementById('totalReposicoes').textContent = reposicoes;
+    document.getElementById('totalAusencias').textContent = ausencias;
+    document.getElementById('registrosEncontrados').textContent = `${registros ? registros.length : 0} registro(s) encontrado(s)`;
+}
     
     async function carregarRegistros() {
         try {
