@@ -818,8 +818,14 @@ function abrirModalNovaSenha() {
 }
 
 async function alterarSenha() {
+    const codigo = document.getElementById('codigoRecuperacao').value;
     const novaSenha = document.getElementById('novaSenha').value;
     const confirmarSenha = document.getElementById('confirmarSenha').value;
+    
+    if (!codigo || codigo.length !== 6) {
+        alert('Digite o código de verificação');
+        return;
+    }
     
     if (!novaSenha || novaSenha.length < 6) {
         alert('A senha deve ter pelo menos 6 caracteres');
@@ -835,7 +841,12 @@ async function alterarSenha() {
         const response = await fetch('/recuperar/alterar_senha', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: emailAtual, usuario: emailAtual, nova_senha: novaSenha })
+            body: JSON.stringify({
+                email: emailAtual,
+                usuario: emailAtual,
+                codigo: codigo,
+                nova_senha: novaSenha
+            })
         });
         
         const data = await response.json();
@@ -843,6 +854,7 @@ async function alterarSenha() {
         if (data.success) {
             alert('✅ Senha alterada com sucesso! Faça login.');
             fecharModal('modalNovaSenha');
+            window.location.href = 'login.html';
         } else {
             alert(data.message || 'Erro ao alterar senha');
         }
