@@ -505,14 +505,15 @@ def criar_registro():
 def atualizar_registro(id):
     try:
         data = request.json
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Atualizar o registro principal
         query = """
             UPDATE registros 
             SET data = %s, tipo = %s, curso_id = %s, serie = %s, 
-                quantidade = %s, horario_inicio = %s, horario_fim = %s, 
-                disciplina = %s, observacoes = %s
+                quantidade = %s, disciplina = %s, observacoes = %s
             WHERE id = %s
         """
         valores = (
@@ -521,20 +522,33 @@ def atualizar_registro(id):
             data['curso_id'],
             data['serie'],
             data['quantidade'],
-            data['horario_inicio'],
-            data['horario_fim'],
             data['disciplina'],
             data.get('observacoes', ''),
             id
         )
         
         cursor.execute(query, valores)
+        
+        # Remover horários antigos e inserir novos
+        cursor.execute("DELETE FROM registro_horarios WHERE registro_id = %s", (id,))
+        
+        # Inserir os novos horários
+        horarios = data.get('horarios', [])
+        for idx, horario in enumerate(horarios):
+            partes = horario.split(' - ')
+            if len(partes) == 2:
+                cursor.execute("""
+                    INSERT INTO registro_horarios (registro_id, horario_inicio, horario_fim, ordem)
+                    VALUES (%s, %s, %s, %s)
+                """, (id, partes[0] + ':00', partes[1] + ':00', idx))
+        
         conn.commit()
         conn.close()
         
         return jsonify({'success': True})
     except Exception as e:
         print("Erro ao atualizar registro:", str(e))
+        traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/registros/<int:id>', methods=['DELETE'])
