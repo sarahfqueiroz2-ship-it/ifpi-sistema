@@ -761,6 +761,7 @@
 
 <script>
     const API = 'https://ifpi-sistema.onrender.com';
+    let editId = null;
     let user = null;
 
     // Menu Toggle
@@ -950,6 +951,38 @@
         carregarCursos();
         carregarProfessores();
 
+        // Carregar dados para edição se houver edit_id na URL
+const urlParams = new URLSearchParams(window.location.search);
+editId = urlParams.get('edit_id');
+
+if (editId) {
+    document.querySelector('.page-title').textContent = 'Editar Registro';
+    document.querySelector('.btn-primary').textContent = 'Atualizar Registro';
+    
+    fetch(`${API}/registros/${editId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.registro) {
+                const reg = data.registro;
+                document.getElementById('data').value = reg.data.split('T')[0];
+                document.querySelector(`input[name="registro"][value="${reg.tipo}"]`).checked = true;
+                document.getElementById('professorSelecionado').value = reg.professor_id;
+                document.getElementById('curso').value = reg.curso_id;
+                document.getElementById('serie').value = reg.serie;
+                document.getElementById('quantidade').value = reg.quantidade;
+                document.getElementById('disciplina').value = reg.disciplina;
+                document.getElementById('observacoes').value = reg.observacoes || '';
+                document.getElementById('tipoProfessor').value = reg.tipo_professor || '';
+                
+                const horarios = reg.horarios ? reg.horarios.split(', ') : [];
+                document.querySelectorAll('input[name="horarios"]').forEach(cb => {
+                    cb.checked = horarios.includes(cb.value);
+                });
+            }
+        })
+        .catch(err => console.error('Erro ao carregar registro:', err));
+}
+
         // Detectar tipo de professor
         const disciplinaInput = document.getElementById('disciplina');
         const tipoProfessorInput = document.getElementById('tipoProfessor');
@@ -964,97 +997,104 @@
         }
 
         // Submissão do formulário
-        const registroForm = document.getElementById('registroForm');
-        if (registroForm) {
-            registroForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+        // Submissão do formulário
+const registroForm = document.getElementById('registroForm');
+if (registroForm) {
+    registroForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-                const tipoRegistro = document.querySelector('input[name="registro"]:checked');
-                if (!tipoRegistro) {
-                    alert('Selecione o tipo de registro');
-                    return;
-                }
+        const tipoRegistro = document.querySelector('input[name="registro"]:checked');
+        if (!tipoRegistro) {
+            alert('Selecione o tipo de registro');
+            return;
+        }
 
-                const professorId = document.getElementById('professorSelecionado').value;
-                if (!professorId) {
-                    alert('Selecione um professor');
-                    return;
-                }
+        const professorId = document.getElementById('professorSelecionado').value;
+        if (!professorId) {
+            alert('Selecione um professor');
+            return;
+        }
 
-                const cursoId = document.getElementById('curso').value;
-                if (!cursoId) {
-                    alert('Selecione um curso');
-                    return;
-                }
+        const cursoId = document.getElementById('curso').value;
+        if (!cursoId) {
+            alert('Selecione um curso');
+            return;
+        }
 
-                const serie = document.getElementById('serie').value;
-                if (!serie) {
-                    alert('Selecione a série/módulo');
-                    return;
-                }
+        const serie = document.getElementById('serie').value;
+        if (!serie) {
+            alert('Selecione a série/módulo');
+            return;
+        }
 
-                const quantidade = document.getElementById('quantidade').value;
-                if (!quantidade) {
-                    alert('Selecione a quantidade de aulas');
-                    return;
-                }
+        const quantidade = document.getElementById('quantidade').value;
+        if (!quantidade) {
+            alert('Selecione a quantidade de aulas');
+            return;
+        }
 
-                const horariosSelecionados = document.querySelectorAll('input[name="horarios"]:checked');
-                if (horariosSelecionados.length === 0) {
-                    alert('Selecione pelo menos um horário');
-                    return;
-                }
+        const horariosSelecionados = document.querySelectorAll('input[name="horarios"]:checked');
+        if (horariosSelecionados.length === 0) {
+            alert('Selecione pelo menos um horário');
+            return;
+        }
 
-                const disciplina = document.getElementById('disciplina').value;
-                if (!disciplina.trim()) {
-                    alert('Digite a disciplina');
-                    return;
-                }
+        const disciplina = document.getElementById('disciplina').value;
+        if (!disciplina.trim()) {
+            alert('Digite a disciplina');
+            return;
+        }
 
-                const data = document.getElementById('data').value;
-                const observacoes = document.getElementById('observacoes').value;
-                const tipoProfessor = document.getElementById('tipoProfessor').value;
+        const data = document.getElementById('data').value;
+        const observacoes = document.getElementById('observacoes').value;
+        const tipoProfessor = document.getElementById('tipoProfessor').value;
+        const horariosLista = Array.from(horariosSelecionados).map(cb => cb.value);
 
-                // PEGAR TODOS OS HORÁRIOS
-                const horariosLista = Array.from(horariosSelecionados).map(cb => cb.value);
+        const payload = {
+            professor_id: parseInt(professorId),
+            data: data,
+            tipo: tipoRegistro.value,
+            curso_id: parseInt(cursoId),
+            serie: serie,
+            quantidade: parseInt(quantidade),
+            horarios: horariosLista,
+            disciplina: disciplina,
+            observacoes: observacoes,
+            tipo_professor: tipoProfessor
+        };
 
-                const payload = {
-                    professor_id: parseInt(professorId),
-                    data: data,
-                    tipo: tipoRegistro.value,
-                    curso_id: parseInt(cursoId),
-                    serie: serie,
-                    quantidade: parseInt(quantidade),
-                    horarios: horariosLista,
-                    disciplina: disciplina,
-                    observacoes: observacoes,
-                    tipo_professor: tipoProfessor
-                };
+        console.log('Enviando dados:', payload);
 
-                console.log('Enviando dados:', payload);
+        try {
+            // DEFINE URL E MÉTODO BASEADO NO editId
+            let url = `${API}/registros`;
+            let method = 'POST';
+            
+            if (editId) {
+                url = `${API}/registros/${editId}`;
+                method = 'PUT';
+            }
 
-                try {
-                    const response = await fetch(`${API}/registros`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        alert('Registro salvo com sucesso!');
-                        window.location.href = 'historico-de-registro.html';
-                    } else {
-                        alert('Erro ao salvar registro: ' + (result.message || 'Erro desconhecido'));
-                    }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    alert('Erro ao conectar com o servidor');
-                }
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(editId ? 'Registro atualizado com sucesso!' : 'Registro salvo com sucesso!');
+                window.location.href = 'historico-de-registro.html';
+            } else {
+                alert('Erro ao salvar registro: ' + (result.message || 'Erro desconhecido'));
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao conectar com o servidor');
         }
     });
+}
 </script>
 
 </body>
