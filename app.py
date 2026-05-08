@@ -1616,6 +1616,12 @@ def recuperar_alterar_senha():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+# ================== FUNÇÕES AUXILIARES PARA RECUPERAÇÃO ==================
+def gerar_codigo():
+    import random
+    import string
+    return ''.join(random.choices(string.digits, k=6))
+    
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
