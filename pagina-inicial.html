@@ -433,6 +433,28 @@
                 flex-wrap: wrap;
             }
         }
+
+        /* Ajustes específicos para o gráfico em mobile */
+@media (max-width: 768px) {
+    .chart-card {
+        height: auto !important;
+        min-height: 300px;
+        padding: 12px;
+    }
+    
+    .chart-card canvas {
+        max-height: 280px !important;
+        min-height: 220px;
+    }
+    
+    .chart-title {
+        font-size: 14px;
+    }
+    
+    .chart-subtitle {
+        font-size: 10px;
+    }
+}
     </style>
 </head>
 <body>
@@ -781,39 +803,143 @@ function gerarMenu() {
         }
     }
 
-    function atualizarGraficoLinha(registros) {
-        const canvas = document.getElementById('lineChart');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (chartLinha) chartLinha.destroy();
-        const dadosPorMes = agruparPorMes(registros);
-        if (dadosPorMes.meses.length === 0) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = '14px Arial';
-            ctx.fillStyle = '#666';
-            ctx.textAlign = 'center';
-            ctx.fillText('Sem dados para exibir', canvas.width / 2, canvas.height / 2);
-            return;
-        }
-        const mostrarRep = document.getElementById('mostrarReposicoes').checked;
-        const mostrarAnt = document.getElementById('mostrarAntecipacoes').checked;
-        const mostrarAus = document.getElementById('mostrarAusencias').checked;
-        const datasets = [];
-        if (mostrarRep) datasets.push({ label: 'Reposições', data: dadosPorMes.reposicoes, borderColor: '#0366d6', backgroundColor: 'rgba(3, 102, 214, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
-        if (mostrarAnt) datasets.push({ label: 'Antecipações', data: dadosPorMes.antecipacoes, borderColor: '#f9c74f', backgroundColor: 'rgba(249, 199, 79, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
-        if (mostrarAus) datasets.push({ label: 'Ausências', data: dadosPorMes.ausencias, borderColor: '#d73a49', backgroundColor: 'rgba(215, 58, 73, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
-        if (datasets.length === 0) datasets.push({ label: 'Total de Aulas', data: dadosPorMes.total, borderColor: '#2d8659', backgroundColor: 'rgba(45, 134, 89, 0.1)', borderWidth: 2, tension: 0.3, fill: true, pointRadius: 3 });
-        chartLinha = new Chart(ctx, {
-            type: 'line',
-            data: { labels: dadosPorMes.meses, datasets },
-            options: {
-                responsive: true, maintainAspectRatio: true,
-                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} aula${ctx.raw !== 1 ? 's' : ''}` } }, legend: { position: 'top' } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Quantidade de Aulas' } }, x: { title: { display: true, text: 'Mês/Ano' }, ticks: { maxRotation: 45, minRotation: 45 } } }
-            }
-        });
+    
+function atualizarGraficoLinha(registros) {
+    const canvas = document.getElementById('lineChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (chartLinha) chartLinha.destroy();
+    
+    const dadosPorMes = agruparPorMes(registros);
+    
+    if (dadosPorMes.meses.length === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sem dados para exibir', canvas.width / 2, canvas.height / 2);
+        return;
     }
-
+    
+    const mostrarRep = document.getElementById('mostrarReposicoes').checked;
+    const mostrarAnt = document.getElementById('mostrarAntecipacoes').checked;
+    const mostrarAus = document.getElementById('mostrarAusencias').checked;
+    
+    const datasets = [];
+    if (mostrarRep) datasets.push({ 
+        label: 'Reposições', 
+        data: dadosPorMes.reposicoes, 
+        borderColor: '#0366d6', 
+        backgroundColor: 'rgba(3, 102, 214, 0.1)', 
+        borderWidth: 2, 
+        tension: 0.3, 
+        fill: true, 
+        pointRadius: window.innerWidth < 768 ? 2 : 3,
+        pointHoverRadius: 5
+    });
+    if (mostrarAnt) datasets.push({ 
+        label: 'Antecipações', 
+        data: dadosPorMes.antecipacoes, 
+        borderColor: '#f9c74f', 
+        backgroundColor: 'rgba(249, 199, 79, 0.1)', 
+        borderWidth: 2, 
+        tension: 0.3, 
+        fill: true,
+        pointRadius: window.innerWidth < 768 ? 2 : 3,
+        pointHoverRadius: 5
+    });
+    if (mostrarAus) datasets.push({ 
+        label: 'Ausências', 
+        data: dadosPorMes.ausencias, 
+        borderColor: '#d73a49', 
+        backgroundColor: 'rgba(215, 58, 73, 0.1)', 
+        borderWidth: 2, 
+        tension: 0.3, 
+        fill: true,
+        pointRadius: window.innerWidth < 768 ? 2 : 3,
+        pointHoverRadius: 5
+    });
+    
+    if (datasets.length === 0) datasets.push({ 
+        label: 'Total de Aulas', 
+        data: dadosPorMes.total, 
+        borderColor: '#2d8659', 
+        backgroundColor: 'rgba(45, 134, 89, 0.1)', 
+        borderWidth: 2, 
+        tension: 0.3, 
+        fill: true,
+        pointRadius: window.innerWidth < 768 ? 2 : 3,
+        pointHoverRadius: 5
+    });
+    
+    const isMobile = window.innerWidth < 768;
+    const maxTicksLimit = isMobile ? 4 : 8;
+    const labelRotation = isMobile ? 35 : 45;
+    const fontSize = isMobile ? 9 : 11;
+    
+    chartLinha = new Chart(ctx, {
+        type: 'line',
+        data: { 
+            labels: dadosPorMes.meses, 
+            datasets 
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                tooltip: { 
+                    callbacks: { 
+                        label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} aula${ctx.raw !== 1 ? 's' : ''}` 
+                    } 
+                },
+                legend: { 
+                    position: 'top',
+                    labels: {
+                        font: { size: isMobile ? 10 : 12 },
+                        boxWidth: isMobile ? 10 : 12
+                    }
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { 
+                        stepSize: 1,
+                        font: { size: isMobile ? 9 : 11 }
+                    }, 
+                    title: { 
+                        display: !isMobile, 
+                        text: 'Quantidade de Aulas',
+                        font: { size: isMobile ? 10 : 12 }
+                    } 
+                }, 
+                x: { 
+                    title: { 
+                        display: !isMobile, 
+                        text: 'Mês/Ano',
+                        font: { size: isMobile ? 10 : 12 }
+                    }, 
+                    ticks: { 
+                        maxRotation: labelRotation, 
+                        minRotation: labelRotation,
+                        font: { size: fontSize },
+                        autoSkip: true,
+                        maxTicksLimit: maxTicksLimit
+                    } 
+                } 
+            },
+            layout: {
+                padding: {
+                    left: isMobile ? 5 : 10,
+                    right: isMobile ? 5 : 10,
+                    top: 10,
+                    bottom: isMobile ? 15 : 10
+                }
+            }
+        }
+    });
+}
+    
     function atualizarDash() {
         const registrosFiltrados = filtrarRegistros();
         atualizarGraficoPizza(registrosFiltrados);
