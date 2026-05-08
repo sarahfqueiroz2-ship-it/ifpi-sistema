@@ -1157,24 +1157,24 @@ function formatarDataParaInput(data) {
             else if (tipoProfessorDisplay === 'Base Comum') tipoProfessorDisplay = 'Base Comum';
 
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td style="white-space: nowrap;">${reg.id}</td>
-                <td style="white-space: nowrap;">${reg.professor_nome || '-'}</td>
-                <td style="white-space: nowrap;">${dataFormatada}</td>
-                <td style="white-space: nowrap;"><span class="badge ${classeBadge}">${tipoDisplay}</span></td>
-                <td style="white-space: nowrap;">${reg.curso_nome || '-'}</td>
-                <td style="white-space: nowrap;">${reg.serie || '-'}</td>
-                <td style="white-space: nowrap;">${reg.quantidade || 0} aulas</td>
-                <td style="white-space: nowrap;"><span class="badge ${classeTipoProfessor}">${tipoProfessorDisplay}</span></td>
-                <td style="white-space: nowrap;">${reg.horarios || '-'}</td>
-                <td style="white-space: nowrap;">${reg.disciplina || '-'}</td>
-                <td style="white-space: nowrap;">
-                    <div class="actions" style="display: flex; gap: 5px; flex-wrap: nowrap;">
-                        <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar" style="padding: 6px 12px; cursor: pointer;">Editar</button>
-                        <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir" style="padding: 6px 12px; cursor: pointer;">Excluir</button>
-                    </div>
-                </td>
-            `;
+           row.innerHTML = `
+    <td data-label="ID">${reg.id}</td>
+    <td data-label="Professor">${reg.professor_nome || '-'}</td>
+    <td data-label="Data">${dataFormatada}</td>
+    <td data-label="Tipo"><span class="badge ${classeBadge}">${tipoDisplay}</span></td>
+    <td data-label="Curso">${reg.curso_nome || '-'}</td>
+    <td data-label="Série">${reg.serie || '-'}</td>
+    <td data-label="Quantidade">${reg.quantidade || 0} aulas</td>
+    <td data-label="Tipo Prof."><span class="badge ${classeTipoProfessor}">${tipoProfessorDisplay}</span></td>
+    <td data-label="Horários">${reg.horarios || '-'}</td>
+    <td data-label="Disciplina">${reg.disciplina || '-'}</td>
+    <td data-label="Ações">
+        <div class="actions" style="display: flex; gap: 5px;">
+            <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar">✏️ Editar</button>
+            <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir">🗑️ Excluir</button>
+        </div>
+    </td>
+`;
             tbody.appendChild(row);
         });
 
