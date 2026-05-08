@@ -705,14 +705,7 @@
     display: table-cell;
     border-bottom: 1px solid var(--cinza-borda);
 }
-#tabelaRegistros tbody tr::-webkit-scrollbar {
-    height: 4px;
-}
 
-#tabelaRegistros tbody tr::-webkit-scrollbar-thumb {
-    background: var(--cinza-borda);
-    border-radius: 4px;
-}
 
         
 #tabelaRegistros td, 
@@ -734,9 +727,10 @@
     min-width: 1100px;
 }
 
-       .table-container {
+     .table-container {
     overflow-x: auto;
-    scroll-behavior: auto;
+    display: block;
+    width: 100%;
 }
     </style>
 </head>
@@ -1129,9 +1123,7 @@ function formatarDataParaInput(data) {
             tbody.appendChild(row);
         });
 
-        setTimeout(() => {
-    container.scrollLeft = 0;
-}, 0);
+    
     }
 
    function editarRegistro(id) {
