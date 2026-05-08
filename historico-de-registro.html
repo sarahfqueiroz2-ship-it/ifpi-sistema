@@ -32,7 +32,7 @@
             color: var(--cinza-texto);
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
-            overflow-x: auto !important;
+            overflow-x: hidden;
         }
 
         /* Sidebar */
@@ -375,10 +375,7 @@
     color: var(--cinza-secundario);
 }
 
-/* Container da tabela com rolagem horizontal */
-.table-container {
-    scroll-behavior: auto !important;
-}
+
 
         
         /* Garantir que a rolagem comece no início */
@@ -684,15 +681,10 @@
 
         
         
-        
-.table-container {
-    scrollbar-width: thin;
-}
-        
 /* Tabela com largura mínima para forçar rolagem */
 #tabelaRegistros {
-    width: max-content !important;
-    min-width: 100% !important;
+    min-width: 1100px;
+    width: 100%;
 }
 
 #tabelaRegistros th,
@@ -738,16 +730,14 @@
     margin-top: 20px;
 }     
 
-        .table-container {
-    overflow-x: auto;
-}
 
 #tabelaRegistros {
     min-width: 1100px;
 }
 
-        .table-container {
+       .table-container {
     overflow-x: auto;
+    scroll-behavior: auto;
 }
     </style>
 </head>
@@ -1093,7 +1083,13 @@ function formatarDataParaInput(data) {
 
     function renderizarTabela(registros) {
         const tbody = document.querySelector('#tabelaRegistros tbody');
+        const container = document.querySelector('.table-container');
+        
         tbody.innerHTML = '';
+
+        container.scrollLeft = 0;
+
+        
         if (!registros || registros.length === 0) {
             tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">Nenhum registro encontrado.</td></tr>';
             return;
@@ -1126,13 +1122,17 @@ function formatarDataParaInput(data) {
                 <td style="white-space: nowrap;">${reg.disciplina || '-'}</td>
                 <td style="white-space: nowrap;">
                     <div class="actions" style="display: flex; gap: 5px; flex-wrap: nowrap;">
-                        <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar" style="padding: 6px 12px; cursor: pointer;">✏️ Editar</button>
-                        <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir" style="padding: 6px 12px; cursor: pointer;">🗑️ Excluir</button>
+                        <button class="btn-icon" onclick="editarRegistro(${reg.id})" title="Editar" style="padding: 6px 12px; cursor: pointer;">Editar</button>
+                        <button class="btn-icon delete" onclick="excluir(${reg.id})" title="Excluir" style="padding: 6px 12px; cursor: pointer;">Excluir</button>
                     </div>
                 </td>
             `;
             tbody.appendChild(row);
         });
+
+        setTimeout(() => {
+    container.scrollLeft = 0;
+}, 0);
     }
 
    function editarRegistro(id) {
