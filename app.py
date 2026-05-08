@@ -438,8 +438,6 @@ def criar_registro():
     try:
         data = request.json
 
-
-    
         campos_obrigatorios = ['professor_id', 'data', 'tipo', 'curso_id', 'serie', 'quantidade', 'disciplina']
         for campo in campos_obrigatorios:
             if campo not in data or data[campo] == '':
@@ -460,11 +458,12 @@ def criar_registro():
             conn.close()
             return jsonify({'success': False, 'message': 'Professor não encontrado'}), 404
 
-        # Inserir registro principal (sem horário_inicio e horario_fim)
+        # Inserir registro principal COM RETURNING id
         query = """
             INSERT INTO registros
             (professor_id, professor_nome, data, tipo, curso_id, serie, quantidade, disciplina, observacoes, tipo_professor)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         """
         valores = (
             prof['id'],
@@ -480,7 +479,7 @@ def criar_registro():
         )
 
         cursor.execute(query, valores)
-        registro_id = cursor.lastrowid
+        registro_id = cursor.fetchone()['id']
 
         # Inserir múltiplos horários
         horarios = data.get('horarios', [])
