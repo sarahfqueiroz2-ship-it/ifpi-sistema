@@ -348,13 +348,12 @@
         }
 
         /* Table Card */
-        .table-card {
+      .table-card {
     background-color: var(--branco);
     border: 1px solid var(--cinza-borda);
     border-radius: 8px;
-    overflow: visible; /* ou remova a linha */
+    overflow: hidden;
 }
-
         .table-header {
             padding: 20px 24px;
             border-bottom: 1px solid var(--cinza-borda);
@@ -374,10 +373,10 @@
             color: var(--cinza-secundario);
         }
 
-       .table-container {
+   .table-container {
     overflow-x: auto;
     width: 100%;
-    -webkit-overflow-scrolling: touch; /* suaviza no mobile */
+    -webkit-overflow-scrolling: touch;
 }
 
         table {
@@ -675,9 +674,9 @@
             }
         }
 
-       #tabelaRegistros {
+    #tabelaRegistros {
     width: 100%;
-    min-width: 1200px;
+    min-width: 1200px; /* mantém esse */
 }
 
 #tabelaRegistros td, 
