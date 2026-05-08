@@ -897,11 +897,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     editId = urlParams.get('edit_id');
     
-    if (editId) {
+   if (editId) {
     document.querySelector('.page-title').textContent = 'Editar Registro';
     document.querySelector('.btn-primary').textContent = 'Atualizar Registro';
     
-    // Buscar dados do registro com horários
     fetch(`${API}/registros_com_horarios`)
         .then(res => res.json())
         .then(data => {
@@ -909,8 +908,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const reg = registros.find(r => r.id == editId);
             
             if (reg && reg.id) {
-                // Data
-                document.getElementById('data').value = reg.data ? reg.data.split('T')[0] : '';
+                // DATA - CORRIGIDA
+                let dataValue = reg.data;
+                if (dataValue) {
+                    if (dataValue.includes('T')) {
+                        dataValue = dataValue.split('T')[0];
+                    } else if (dataValue.includes('/')) {
+                        const partes = dataValue.split('/');
+                        dataValue = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                    }
+                    document.getElementById('data').value = dataValue;
+                }
                 
                 // Tipo de registro
                 const radio = document.querySelector(`input[name="registro"][value="${reg.tipo}"]`);
@@ -945,29 +953,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Tipo professor
                 document.getElementById('tipoProfessor').value = reg.tipo_professor || 'Base Comum';
                 
-                // HORÁRIOS - usando o campo 'horarios' que já vem formatado
+                // Horários
                 let horarios = [];
                 if (reg.horarios && typeof reg.horarios === 'string') {
-                    // Formato: "07:00 - 08:00, 08:00 - 09:00"
                     horarios = reg.horarios.split(', ').map(h => h.trim());
                 }
-                
-                console.log('Horários encontrados:', horarios);
                 
                 document.querySelectorAll('input[name="horarios"]').forEach(cb => {
                     cb.checked = horarios.includes(cb.value);
                 });
                 
                 console.log('Registro carregado:', reg);
-            } else {
-                console.error('Registro não encontrado');
-                alert('Erro ao carregar dados do registro');
             }
         })
-        .catch(err => {
-            console.error('Erro ao carregar registro:', err);
-            alert('Erro ao carregar dados para edição');
-        });
+        .catch(err => console.error('Erro ao carregar registro:', err));
 }
     
     const disciplinaInput = document.getElementById('disciplina');
