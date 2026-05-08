@@ -349,11 +349,11 @@
 
         /* Table Card */
         .table-card {
-            background-color: var(--branco);
-            border: 1px solid var(--cinza-borda);
-            border-radius: 8px;
-            overflow: hidden;
-        }
+    background-color: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    overflow: visible; /* ou remova a linha */
+}
 
         .table-header {
             padding: 20px 24px;
@@ -377,6 +377,7 @@
        .table-container {
     overflow-x: auto;
     width: 100%;
+    -webkit-overflow-scrolling: touch; /* suaviza no mobile */
 }
 
         table {
