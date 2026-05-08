@@ -1218,31 +1218,7 @@ function formatarDataParaInput(data) {
         document.getElementById('tipoFiltro').addEventListener('change', filtrar);
         document.getElementById('cursoFiltro').addEventListener('change', filtrar);
         
-        // Evento do formulário de edição
-        document.getElementById('formEdicao').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editId').value;
-            const data = document.getElementById('editData').value;
-            const tipo = document.getElementById('editTipo').value;
-            const cursoId = document.getElementById('editCurso').value;
-            const serie = document.getElementById('editSerie').value;
-            const quantidade = document.getElementById('editQuantidade').value;
-            const horarioInicio = document.getElementById('editHorarioInicio').value;
-            const disciplina = document.getElementById('editDisciplina').value;
-            const observacoes = document.getElementById('editObservacoes').value;
-            if (!cursoId) { alert('Selecione um curso!'); return; }
-            const [hora, minuto] = horarioInicio.split(':');
-            const horaFim = parseInt(hora) + parseInt(quantidade);
-            const horaFimAjustada = horaFim >= 24 ? 23 : horaFim;
-            const horarioFim = `${String(horaFimAjustada).padStart(2,'0')}:${minuto}:00`;
-            const payload = { data, tipo, curso_id: parseInt(cursoId), serie, quantidade: parseInt(quantidade), horario_inicio: horarioInicio + ':00', horario_fim: horarioFim, disciplina, observacoes };
-            try {
-                const response = await fetch(`${API}/registros/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                const result = await response.json();
-                if (result.success) { alert('Registro atualizado com sucesso!'); fecharModalEdicao(); carregarRegistros(); }
-                else alert('Erro ao atualizar registro: ' + (result.message || 'Erro desconhecido'));
-            } catch(error) { console.error('Erro:', error); alert('Erro ao conectar com o servidor.'); }
-        });
+        
     });
 </script>
 </body>
