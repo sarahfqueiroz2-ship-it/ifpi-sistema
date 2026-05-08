@@ -909,17 +909,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (reg && reg.id) {
                 // DATA - CORRIGIDA
-                let dataValue = reg.data;
-                if (dataValue) {
-                    if (dataValue.includes('T')) {
-                        dataValue = dataValue.split('T')[0];
-                    } else if (dataValue.includes('/')) {
-                        const partes = dataValue.split('/');
-                        dataValue = `${partes[2]}-${partes[1]}-${partes[0]}`;
-                    }
-                    document.getElementById('data').value = dataValue;
-                }
-                
+              let dataValue = reg.data;
+if (dataValue) {
+    try {
+        // Tenta converter a string para Date
+        const dataObj = new Date(dataValue);
+        if (!isNaN(dataObj.getTime())) {
+            dataValue = dataObj.toISOString().split('T')[0];
+        }
+    } catch(e) {
+        console.error('Erro ao converter data:', e);
+    }
+    document.getElementById('data').value = dataValue;
+}
                 // Tipo de registro
                 const radio = document.querySelector(`input[name="registro"][value="${reg.tipo}"]`);
                 if (radio) radio.checked = true;
