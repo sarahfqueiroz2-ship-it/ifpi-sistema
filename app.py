@@ -320,7 +320,12 @@ def listar_registros():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM registros")
+        cursor.execute("""
+            SELECT r.*, c.nome as curso_nome
+            FROM registros r
+            LEFT JOIN cursos c ON r.curso_id = c.id
+            ORDER BY r.data DESC
+        """)
         rows = cursor.fetchall()
         conn.close()
 
@@ -330,7 +335,7 @@ def listar_registros():
             for key, value in reg.items():
                 if isinstance(value, (timedelta,)):
                     reg[key] = str(value)
-                elif hasattr(value, 'isoformat'):  # Para date, time, datetime
+                elif hasattr(value, 'isoformat'):
                     reg[key] = value.isoformat()
                 elif isinstance(value, bytes):
                     reg[key] = value.decode('utf-8')
