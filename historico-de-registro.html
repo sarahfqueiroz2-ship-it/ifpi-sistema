@@ -347,7 +347,9 @@
             border-color: var(--verde-principal);
         }
 
-  /* Table Card */
+ 
+
+/* Table Card */
 .table-card {
     background-color: var(--branco);
     border: 1px solid var(--cinza-borda);
@@ -361,8 +363,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
 }
-
 
 .table-title {
     font-size: 16px;
@@ -375,14 +378,7 @@
     color: var(--cinza-secundario);
 }
 
-
-
-        
-        /* Garantir que a rolagem comece no início */
-.table-container::-webkit-scrollbar {
-    height: 8px;
-}
-
+   
 
         table {
             width: 100%;
@@ -731,6 +727,65 @@
     overflow-x: auto;
     display: block;
     width: 100%;
+}
+
+        .table-container {
+    width: 100%;
+    overflow-x: visible;
+}
+
+#tabelaRegistros {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#tabelaRegistros th,
+#tabelaRegistros td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--cinza-borda);
+}
+
+/* Em telas pequenas, transforma a tabela em blocos */
+@media (max-width: 768px) {
+    #tabelaRegistros,
+    #tabelaRegistros thead,
+    #tabelaRegistros tbody,
+    #tabelaRegistros tr {
+        display: block;
+    }
+    
+    #tabelaRegistros thead {
+        display: none;
+    }
+    
+    #tabelaRegistros tr {
+        margin-bottom: 20px;
+        border: 1px solid var(--cinza-borda);
+        border-radius: 8px;
+        padding: 10px;
+    }
+    
+    #tabelaRegistros td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border-bottom: 1px solid var(--cinza-borda);
+        padding: 10px 12px;
+    }
+    
+    #tabelaRegistros td:last-child {
+        border-bottom: none;
+    }
+    
+    #tabelaRegistros td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        text-align: left;
+        margin-right: 15px;
+        color: var(--cinza-secundario);
+    }
 }
     </style>
 </head>
