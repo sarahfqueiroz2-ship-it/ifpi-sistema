@@ -1019,6 +1019,17 @@ function atualizarGraficoLinha(registros) {
         document.getElementById('dataFim').addEventListener('change', atualizarDash);
         document.getElementById('filtroProfessor').addEventListener('change', atualizarDash);
         document.getElementById('filtroDisciplina').addEventListener('input', atualizarDash);
+
+        // Redesenha o gráfico ao redimensionar a janela (rotação do celular)
+let resizeTimeout;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+        if (todosRegistros.length > 0) {
+            atualizarGraficoLinha(filtrarRegistros());
+        }
+    }, 250);
+});
     });
 </script>
 
