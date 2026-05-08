@@ -682,6 +682,15 @@
 #tabelaRegistros th {
     white-space: nowrap;
 }
+
+   .modal {
+    align-items: flex-start;
+    padding-top: 50px;
+}
+
+.modal-content {
+    margin-top: 20px;
+}     
     </style>
 </head>
 <body>
@@ -1196,39 +1205,42 @@ function formatarDataParaInput(data) {
         });
     }
 
-    async function editarRegistro(id) {
-        try {
-            const registro = todosRegistros.find(r => r.id === id);
-            if (!registro) return;
-            
-            document.getElementById('editId').value = registro.id;
-            document.getElementById('editData').value = formatarDataParaInput(registro.data);
-            
-            let tipoValue = registro.tipo ? registro.tipo.toLowerCase() : '';
-            if (tipoValue === 'reposição') tipoValue = 'reposicao';
-            if (tipoValue === 'antecipação') tipoValue = 'antecipacao';
-            if (tipoValue === 'ausência') tipoValue = 'ausencia';
-            document.getElementById('editTipo').value = tipoValue;
-            document.getElementById('editQuantidade').value = registro.quantidade || '1';
-            
-            if (registro.horario_inicio) {
-                const horario = registro.horario_inicio.substring(0,5);
-                document.getElementById('editHorarioInicio').value = horario;
-            }
-            
-            document.getElementById('editDisciplina').value = registro.disciplina || '';
-            document.getElementById('editObservacoes').value = registro.observacoes || '';
-            
-            if (registro.serie) document.getElementById('editSerie').value = registro.serie;
-            
-            await carregarCursosSelect(registro.curso_id);
-            
-            document.getElementById('modalEdicao').classList.add('active');
-        } catch(error) {
-            console.error('Erro ao abrir edição:', error);
-            alert('Erro ao carregar dados para edição.');
+   async function editarRegistro(id) {
+    try {
+        const registro = todosRegistros.find(r => r.id === id);
+        if (!registro) return;
+        
+        document.getElementById('editId').value = registro.id;
+        document.getElementById('editData').value = formatarDataParaInput(registro.data);
+        
+        let tipoValue = registro.tipo ? registro.tipo.toLowerCase() : '';
+        if (tipoValue === 'reposição') tipoValue = 'reposicao';
+        if (tipoValue === 'antecipação') tipoValue = 'antecipacao';
+        if (tipoValue === 'ausência') tipoValue = 'ausencia';
+        document.getElementById('editTipo').value = tipoValue;
+        document.getElementById('editQuantidade').value = registro.quantidade || '1';
+        
+        if (registro.horario_inicio) {
+            document.getElementById('editHorarioInicio').value = registro.horario_inicio.substring(0,5);
         }
+        
+        document.getElementById('editDisciplina').value = registro.disciplina || '';
+        document.getElementById('editObservacoes').value = registro.observacoes || '';
+        
+        if (registro.serie) document.getElementById('editSerie').value = registro.serie;
+        
+        await carregarCursosSelect(registro.curso_id);
+        
+        // Abrir modal e rolar para o topo
+        const modal = document.getElementById('modalEdicao');
+        modal.classList.add('active');
+        modal.scrollTop = 0;
+        
+    } catch(error) {
+        console.error('Erro ao abrir edição:', error);
+        alert('Erro ao carregar dados para edição.');
     }
+}
 
     // Evento do formulário de edição
     document.getElementById('formEdicao').addEventListener('submit', async function(e) {
@@ -1370,6 +1382,26 @@ async function carregarProfessoresSelect(professorSelecionado = null) {
         renderizarTabela(filtrados);
         atualizarContadores(filtrados);
     }
+
+    async function carregarCursosSelect(cursoSelecionado = null) {
+    try {
+        const response = await fetch(`${API}/cursos`);
+        const data = await response.json();
+        const select = document.getElementById('editCurso');
+        if (select) {
+            select.innerHTML = '<option value="">Selecione um curso</option>';
+            data.cursos.forEach(curso => {
+                const option = document.createElement('option');
+                option.value = curso.id;
+                option.textContent = curso.nome;
+                if (cursoSelecionado && curso.id === cursoSelecionado) option.selected = true;
+                select.appendChild(option);
+            });
+        }
+    } catch(error) {
+        console.error('Erro ao carregar cursos:', error);
+    }
+}
 
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
