@@ -1784,6 +1784,59 @@ def resetar_sequencia():
         return "✅ Sequências resetadas com sucesso!"
     except Exception as e:
         return f"❌ Erro: {e}"
+
+# ================== ROTA DE LOGS DE AUDITORIA ==================
+@app.route('/admin/logs', methods=['GET'])
+def admin_visualizar_logs():
+    try:
+        usuario_id = request.args.get('usuario_id', type=int)
+        
+        if not usuario_id:
+            return jsonify({'success': False, 'message': 'Usuario nao autenticado'}), 401
+        
+        user_tipo = get_tipo_usuario(usuario_id)
+        
+        # So admin pode ver os logs
+        if user_tipo != 'admin':
+            return jsonify({'success': False, 'message': 'Acesso negado'}), 403
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Buscar os ultimos 200 logs
+        cursor.execute("""
+            SELECT * FROM logs_auditoria 
+            ORDER BY created_at DESC 
+            LIMIT 200
+        """)
+        
+        logs = cursor.fetchall()
+        conn.close()
+        
+        # Converter para JSON
+        logs_json = []
+        for log in logs:
+            logs_json.append({
+                'id': log['id'],
+                'usuario_id': log['usuario_id'],
+                'usuario_nome': log['usuario_nome'],
+                'acao': log['acao'],
+                'tabela': log['tabela'],
+                'registro_id': log['registro_id'],
+                'dados_antes': log['dados_antes'],
+                'dados_depois': log['dados_depois'],
+                'ip': log['ip'],
+                'user_agent': log['user_agent'],
+                'created_at': log['created_at'].isoformat() if log['created_at'] else None
+            })
+        
+        return jsonify({'logs': logs_json, 'success': True})
+        
+    except Exception as e:
+        print(f"Erro ao buscar logs: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
