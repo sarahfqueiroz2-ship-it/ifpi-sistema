@@ -1114,67 +1114,81 @@
         return html;
     }    
 
-    function abrirModal(turmaId, dia, horarioId, statusAtual, professorNomeAtual, professorDonoId, semanaInicio) {
-        modalData = { turmaId, dia, horarioId, semanaInicio };
-        
-        const modal = document.getElementById('modal');
-        const modalTitulo = document.getElementById('modalTitulo');
-        const modalInfo = document.getElementById('modalInfo');
-        const botoesDiv = document.getElementById('modalBotoes');
-        
-        const diaNome = getNomeDia(dia);
-        const horario = getHorarioDoHorarioId(horarioId);
-        
-        modalTitulo.textContent = 'Gerenciar Horario';
-        modalInfo.innerHTML = `<strong>${diaNome}</strong><br>${horario.inicio} - ${horario.fim}<br><br>`;
-        
-        botoesDiv.innerHTML = '';
-        
-        const isDono = (professorDonoId === professorId);
-        
-        if (statusAtual === 'normal') {
-            modalInfo.innerHTML += `Status atual: Normal (aula normal)`;
-            if (userTipo === 'coordenador') {
-                botoesDiv.innerHTML = `
-                    <button class="btn btn-vago" onclick="marcarHorario('vago')">Disponibilizar Vago</button>
-                    <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                `;
-            } else {
-                botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
-            }
+function abrirModal(turmaId, dia, horarioId, statusAtual, professorNomeAtual, professorDonoId, semanaInicio) {
+    modalData = { turmaId, dia, horarioId, semanaInicio };
+    
+    const modal = document.getElementById('modal');
+    const modalTitulo = document.getElementById('modalTitulo');
+    const modalInfo = document.getElementById('modalInfo');
+    const botoesDiv = document.getElementById('modalBotoes');
+    
+    const diaNome = getNomeDia(dia);
+    const horario = getHorarioDoHorarioId(horarioId);
+    
+    modalTitulo.textContent = 'Gerenciar Horário';
+    modalInfo.innerHTML = `<strong>${diaNome}</strong><br>${horario.inicio} - ${horario.fim}<br><br>`;
+    
+    botoesDiv.innerHTML = '';
+    
+    const isDono = (professorDonoId === professorId);
+    const isCoordenador = (userTipo === 'coordenador');
+    const isProfessor = (userTipo === 'professor');
+    
+    if (statusAtual === 'normal') {
+        modalInfo.innerHTML += `Status atual: Normal (aula normal)`;
+        if (isCoordenador) {
+            botoesDiv.innerHTML = `
+                <button class="btn btn-vago" onclick="marcarHorario('vago')">Disponibilizar Vago</button>
+                <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            `;
+        } else {
+            botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
         }
-        else if (statusAtual === 'vago') {
-            modalInfo.innerHTML += `Status atual: Vago (disponivel)`;
-            
-            if (userTipo === 'coordenador') {
-                botoesDiv.innerHTML = `
-                    <button class="btn btn-normal" onclick="marcarHorario('normal')">Remover Vago</button>
-                    <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                `;
-            } else if (userTipo === 'professor' && professorId) {
-                botoesDiv.innerHTML = `
-                    <button class="btn btn-ocupado" onclick="marcarHorario('ocupado')">Pegar Horario</button>
-                    <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                `;
-            } else {
-                botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
-            }
-        }
-        else if (statusAtual === 'ocupado') {
-            if (isDono) {
-                modalInfo.innerHTML += `Status atual: Ocupado por voce`;
-                botoesDiv.innerHTML = `
-                    <button class="btn btn-vago" onclick="marcarHorario('vago')">Cancelar Ocupacao (Virar Vago)</button>
-                    <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                `;
-            } else {
-                modalInfo.innerHTML += `Status atual: Ocupado por ${professorNomeAtual || 'outro professor'}`;
-                botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
-            }
-        }
-        
-        modal.style.display = 'flex';
     }
+    else if (statusAtual === 'vago') {
+        modalInfo.innerHTML += `Status atual: Vago (disponível)`;
+        
+        if (isCoordenador) {
+            botoesDiv.innerHTML = `
+                <button class="btn btn-normal" onclick="marcarHorario('normal')">Remover Vago</button>
+                <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            `;
+        } else if (isProfessor && professorId) {
+            botoesDiv.innerHTML = `
+                <button class="btn btn-ocupado" onclick="marcarHorario('ocupado')">Pegar Horário</button>
+                <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            `;
+        } else {
+            botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
+        }
+    }
+    else if (statusAtual === 'ocupado') {
+        if (isDono) {
+            modalInfo.innerHTML += `Status atual: Ocupado por você`;
+            
+            if (isProfessor) {
+                // Professor CANCELA (volta para normal)
+                botoesDiv.innerHTML = `
+                    <button class="btn btn-normal" onclick="marcarHorario('normal')">Cancelar meu horário</button>
+                    <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                `;
+            } else if (isCoordenador) {
+                // Coordenador pode transformar em VAGO
+                botoesDiv.innerHTML = `
+                    <button class="btn btn-vago" onclick="marcarHorario('vago')">Transformar em VAGO</button>
+                    <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                `;
+            } else {
+                botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
+            }
+        } else {
+            modalInfo.innerHTML += `Status atual: Ocupado por ${professorNomeAtual || 'outro professor'}`;
+            botoesDiv.innerHTML = `<button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button>`;
+        }
+    }
+    
+    modal.style.display = 'flex';
+}
     
     function getHorarioDoHorarioId(horarioId) {
         const horarios = {
