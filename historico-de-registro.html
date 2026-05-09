@@ -756,6 +756,67 @@ body {
     overflow: visible !important;
 }
 
+
+   /* Botões de navegação horizontal da tabela */
+.table-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 0 4px;
+}
+
+.btn-scroll {
+    padding: 8px 12px;
+    background-color: var(--verde-principal);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.btn-scroll:hover {
+    background-color: var(--verde-escuro);
+    transform: scale(1.02);
+}
+
+.btn-scroll:active {
+    transform: scale(0.98);
+}
+
+.scroll-indicator {
+    font-size: 12px;
+    color: var(--cinza-secundario);
+    background-color: var(--cinza-medio);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* Ajuste do container da tabela */
+.table-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    min-height: 80px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    scroll-behavior: smooth;
+}
+
+/* Esconder scrollbar no mobile para usar botões (opcional) */
+@media (max-width: 768px) {
+    .table-container::-webkit-scrollbar {
+        height: 4px;
+    }
+}     
+
     </style>
 </head>
 <body>
@@ -877,6 +938,16 @@ body {
                     <h2 class="table-title">Todos os Registros</h2>
                     <span class="table-count" id="registrosEncontrados">0 registros encontrados</span>
                 </div>
+                <!-- Navegação horizontal da tabela -->
+<div class="table-nav">
+    <button class="btn-scroll" onclick="scrollTabela('esquerda')">
+        ◀◀ Voltar
+    </button>
+    <span class="scroll-indicator" id="scrollIndicator">↔️ Arraste ou use os botões</span>
+    <button class="btn-scroll" onclick="scrollTabela('direita')">
+        Avançar ▶▶
+    </button>
+</div>
 <div class="table-container" style="overflow-x: auto; width: 100%;">
 <table id="tabelaRegistros" style="min-width: 1200px;">
     <thead>
@@ -1303,6 +1374,56 @@ window.addEventListener('load', function() {
 });
         
     });
+
+    // ================== FUNÇÕES DE ROLAGEM HORIZONTAL ==================
+function scrollTabela(direcao) {
+    const container = document.querySelector('.table-container');
+    if (!container) return;
+    
+    const scrollAmount = 300; // pixels por clique
+    
+    if (direcao === 'esquerda') {
+        container.scrollLeft -= scrollAmount;
+    } else if (direcao === 'direita') {
+        container.scrollLeft += scrollAmount;
+    }
+    
+    // Atualizar indicador visual (opcional)
+    atualizarIndicadorScroll(container);
+}
+
+function atualizarIndicadorScroll(container) {
+    const indicator = document.getElementById('scrollIndicator');
+    if (!indicator) return;
+    
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const currentScroll = container.scrollLeft;
+    
+    if (maxScroll <= 0) {
+        indicator.textContent = '✅ Tabela totalmente visível';
+        indicator.style.color = 'var(--verde-principal)';
+    } else if (currentScroll <= 5) {
+        indicator.textContent = '👉 Arraste para direita ou clique em "Avançar"';
+        indicator.style.color = 'var(--cinza-secundario)';
+    } else if (currentScroll >= maxScroll - 5) {
+        indicator.textContent = '👈 Arraste para esquerda ou clique em "Voltar"';
+        indicator.style.color = 'var(--cinza-secundario)';
+    } else {
+        indicator.textContent = '↔️ Use os botões ou arraste para navegar';
+        indicator.style.color = 'var(--cinza-secundario)';
+    }
+}
+
+// Adicionar evento de scroll para atualizar indicador
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const container = document.querySelector('.table-container');
+        if (container) {
+            container.addEventListener('scroll', () => atualizarIndicadorScroll(container));
+            atualizarIndicadorScroll(container);
+        }
+    }, 500);
+});
 </script>
 </body>
 </html>
