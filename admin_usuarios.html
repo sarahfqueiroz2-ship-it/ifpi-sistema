@@ -575,6 +575,12 @@
             
             if (tipo === 'admin') {
                 links.push({ href: 'admin_usuarios.html', icon: 'M12 4a4 4 0 10-8 0 4 4 0 008 0zm-4 6a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zm7 0a3 3 0 00-3 3v1h6v-1a3 3 0 00-3-3z', text: 'Gerenciar Usuários' });
+          
+             links.push({ 
+            href: 'admin_logs.html', 
+            icon: 'M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z', 
+            text: 'Logs de Auditoria' 
+        });
             }
             
             let html = '';
