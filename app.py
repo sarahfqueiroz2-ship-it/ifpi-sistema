@@ -1121,33 +1121,38 @@ def marcar_horario():
                 conn.close()
                 return jsonify({'success': False, 'message': 'Este horário não está disponível'}), 400
         
-        # REGRA 4: PROFESSOR cancelando seu próprio horário (ocupado -> normal)
-        elif data['status'] == 'normal' and user_tipo == 'professor' and professor_id:
-            if existente and existente['status'] == 'ocupado' and existente['professor_id'] == professor_id:
-                cursor.execute("DELETE FROM calendario_marcacoes WHERE id = %s", (existente['id'],))
-                conn.commit()
-                
-                # Notificar coordenador
-                cursor.execute("SELECT id FROM usuarios WHERE tipo = 'coordenador'")
-                coordenadores = cursor.fetchall()
-                for coord in coordenadores:
-                    try:
-                        cursor.execute("""
-                            INSERT INTO notificacoes 
-                            (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        """, ('horario_cancelado', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], 
-                              get_dia_nome(data['dia_semana']), data['horario_id'], get_nome_professor(professor_id), coord['id'], 'pendente', 
-                              f'{get_nome_professor(professor_id)} cancelou seu horário'))
-                    except Exception as e:
-                        print(f"Erro notificação: {e}")
-                
-                conn.commit()
-                conn.close()
-                return jsonify({'success': True, 'message': 'Você cancelou seu horário!'})
-            else:
-                conn.close()
-                return jsonify({'success': False, 'message': 'Este horário não pertence a você'}), 400
+        # REGRA 4: PROFESSOR cancelando seu próprio horário (ocupado -> vago)
+elif data['status'] == 'vago' and user_tipo == 'professor' and professor_id:
+    if existente and existente['status'] == 'ocupado' and existente['professor_id'] == professor_id:
+        # Em vez de DELETAR, transforma em VAGO
+        cursor.execute("""
+            UPDATE calendario_marcacoes 
+            SET status = 'vago', professor_id = NULL 
+            WHERE id = %s
+        """, (existente['id'],))
+        conn.commit()
+        
+        # Notificar coordenador
+        cursor.execute("SELECT id FROM usuarios WHERE tipo = 'coordenador'")
+        coordenadores = cursor.fetchall()
+        for coord in coordenadores:
+            try:
+                cursor.execute("""
+                    INSERT INTO notificacoes 
+                    (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, ('horario_cancelado', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], 
+                      get_dia_nome(data['dia_semana']), data['horario_id'], get_nome_professor(professor_id), coord['id'], 'pendente', 
+                      f'{get_nome_professor(professor_id)} cancelou seu horário (voltou para VAGO)'))
+            except Exception as e:
+                print(f"Erro notificação: {e}")
+        
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Horário cancelado! Voltou a ser VAGO.'})
+    else:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Este horário não pertence a você'}), 400
         
         # REGRA 5: PROFESSOR marcando como VAGO? NÃO PERMITIDO
         elif data['status'] == 'vago' and user_tipo == 'professor':
