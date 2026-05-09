@@ -1201,45 +1201,69 @@
         modalData = null;
     }
     
-    async function marcarHorario(status) {
-        if (!modalData) {
-            fecharModal();
-            return;
-        }
-        
-        try {
-            const payload = {
-                turma_id: modalData.turmaId,
-                dia_semana: modalData.dia,
-                horario_id: modalData.horarioId,
-                status: status,
-                semana_inicio: modalData.semanaInicio,
-                usuario_id: usuarioId
-            };
-            
-            const response = await fetch('/calendario_professor/marcar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                const cursoId = document.getElementById('cursoSelect').value;
-                const event = new Event('change');
-                document.getElementById('cursoSelect').dispatchEvent(event);
-                // Recarregar resumo após ação
-                if (professorId) {
-                    await carregarRegistrosProfessor();
-                }
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-        }
-        
+   async function marcarHorario(status) {
+    if (!modalData) {
         fecharModal();
+        return;
     }
+    
+    try {
+        const payload = {
+            turma_id: modalData.turmaId,
+            dia_semana: modalData.dia,
+            horario_id: modalData.horarioId,
+            status: status,
+            semana_inicio: modalData.semanaInicio,
+            usuario_id: usuarioId,
+            professor_id: professorId  // Adicionar professor_id se disponível
+        };
+        
+        const response = await fetch('/calendario_professor/marcar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // RECARREGAR APENAS O CALENDÁRIO ATUAL (sem recarregar a página inteira)
+            const cursoId = document.getElementById('cursoSelect').value;
+            if (cursoId) {
+                await recarregarCalendarioAtual(cursoId);
+            }
+            
+            // Se for professor, recarregar resumo
+            if (userTipo === 'professor' && professorId) {
+                await carregarRegistrosProfessor();
+            }
+        } else {
+            alert(data.message || 'Erro ao marcar horário');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao comunicar com o servidor');
+    }
+    
+    fecharModal();
+}
+
+// NOVA FUNÇÃO: Recarrega apenas o calendário atual sem recarregar a página
+async function recarregarCalendarioAtual(cursoId) {
+    const container = document.getElementById('calendariosContainer');
+    if (!container) return;
+    
+    const curso = cursos.find(c => c.id == cursoId);
+    if (!curso || !curso.turmas || curso.turmas.length === 0) {
+        return;
+    }
+    
+    container.innerHTML = '<div class="loading">Atualizando calendários...</div>';
+    
+    for (const turma of curso.turmas) {
+        await carregarCalendarioTurma(turma.id, turma.nome, container);
+    }
+}
     
     function getNomeDia(dia) {
         const dias = { 
