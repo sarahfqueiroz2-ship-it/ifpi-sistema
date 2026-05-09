@@ -1050,16 +1050,22 @@ def marcar_horario():
                 """, (data['turma_id'], data['dia_semana'], data['horario_id'], 'vago', data['semana_inicio']))
                 conn.commit()
                 
-                # Notificar professores
+                # Notificar professores - CORRIGIDO: sem ID fixo
                 cursor.execute("SELECT id FROM professores")
                 professores = cursor.fetchall()
                 
                 for prof in professores:
-                    cursor.execute("""
-                        INSERT INTO notificacoes 
-                        (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, ('vago_disponivel', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], get_dia_nome(data['dia_semana']), data['horario_id'], 'Coordenador', prof['id'], 'pendente', f'Horario VAGO em {turma_nome}'))
+                    mensagem = f'Horário VAGO disponível em {turma_nome}'
+                    try:
+                        cursor.execute("""
+                            INSERT INTO notificacoes 
+                            (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """, ('vago_disponivel', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], 
+                              get_dia_nome(data['dia_semana']), data['horario_id'], 'Coordenador', prof['id'], 'pendente', mensagem))
+                    except Exception as e_notif:
+                        print(f"Erro ao criar notificação para professor {prof['id']}: {e_notif}")
+                        # Continua mesmo se uma notificação falhar
                 
                 conn.commit()
                 conn.close()
@@ -1099,16 +1105,21 @@ def marcar_horario():
                     """, (professor_id, existente['id']))
                     conn.commit()
                     
-                    # Notificar coordenador
+                    # Notificar coordenador - CORRIGIDO
                     cursor.execute("SELECT id FROM usuarios WHERE tipo = 'coordenador'")
                     coordenadores = cursor.fetchall()
                     
                     for coord in coordenadores:
-                        cursor.execute("""
-                            INSERT INTO notificacoes 
-                            (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        """, ('horario_ocupado', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], get_dia_nome(data['dia_semana']), data['horario_id'], get_nome_professor(professor_id), coord['id'], 'pendente', f'{get_nome_professor(professor_id)} pegou horario VAGO'))
+                        mensagem = f'{get_nome_professor(professor_id)} pegou horário VAGO'
+                        try:
+                            cursor.execute("""
+                                INSERT INTO notificacoes 
+                                (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, ('horario_ocupado', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], 
+                                  get_dia_nome(data['dia_semana']), data['horario_id'], get_nome_professor(professor_id), coord['id'], 'pendente', mensagem))
+                        except Exception as e_notif:
+                            print(f"Erro ao criar notificação: {e_notif}")
                     
                     conn.commit()
                     conn.close()
@@ -1135,16 +1146,21 @@ def marcar_horario():
                     """, (existente['id'],))
                     conn.commit()
                     
-                    # Notificar outros professores
+                    # Notificar outros professores - CORRIGIDO
                     cursor.execute("SELECT id FROM professores WHERE id != %s", (professor_id,))
                     professores = cursor.fetchall()
                     
                     for prof in professores:
-                        cursor.execute("""
-                            INSERT INTO notificacoes 
-                            (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        """, ('vago_disponivel', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], get_dia_nome(data['dia_semana']), data['horario_id'], get_nome_professor(professor_id), prof['id'], 'pendente', f'Horario VAGO disponivel por {get_nome_professor(professor_id)}'))
+                        mensagem = f'Horário VAGO disponível por {get_nome_professor(professor_id)}'
+                        try:
+                            cursor.execute("""
+                                INSERT INTO notificacoes 
+                                (tipo, turma_id, turma_nome, curso_nome, dia_semana, dia_nome, horario_id, professor_origem_nome, professor_destino_id, status, mensagem)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, ('vago_disponivel', data['turma_id'], turma_nome, curso_nome, data['dia_semana'], 
+                                  get_dia_nome(data['dia_semana']), data['horario_id'], get_nome_professor(professor_id), prof['id'], 'pendente', mensagem))
+                        except Exception as e_notif:
+                            print(f"Erro ao criar notificação: {e_notif}")
                     
                     conn.commit()
                     conn.close()
