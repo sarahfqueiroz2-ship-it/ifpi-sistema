@@ -76,7 +76,7 @@ def get_db_connection():
         return pymysql.connect(
             host='localhost',
             user='root',
-            password='Ifpi@2026#Segura',
+            password="Ifpi@2026#Segura",
             database='ifpi_aulas',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
