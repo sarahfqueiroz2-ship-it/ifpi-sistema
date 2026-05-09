@@ -1,4 +1,5 @@
 import os
+import bcrypt
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, request, jsonify, send_from_directory
@@ -17,7 +18,15 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 CORS(app)
 
+# ================== FUNÇÕES DE SEGURANÇA ==================
+def hash_senha(senha):
+    """Gera hash bcrypt da senha"""
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(senha.encode('utf-8'), salt).decode('utf-8')
 
+def verificar_senha(senha, hash_armazenado):
+    """Verifica se a senha corresponde ao hash"""
+    return bcrypt.checkpw(senha.encode('utf-8'), hash_armazenado.encode('utf-8'))
 
 # ================== DEBUG COMPLETO ==================
 import sys
@@ -67,7 +76,7 @@ def get_db_connection():
         return pymysql.connect(
             host='localhost',
             user='root',
-            password='ifpi2026',
+            password='Ifpi@2026#Segura',
             database='ifpi_aulas',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
@@ -285,32 +294,69 @@ def login():
         data = request.json
         usuario = data.get('usuario')
         senha = data.get('senha')
+        
+        print(f"=== TENTATIVA DE LOGIN ===")
+        print(f"Usuário: {usuario}")
+        print(f"Senha digitada: {senha}")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT u.*, p.disciplina, p.tipo as tipo_professor FROM usuarios u LEFT JOIN professores p ON u.id = p.usuario_id WHERE u.usuario = %s AND u.senha = MD5(%s)",
-            (usuario, senha)
+            "SELECT u.*, p.disciplina, p.tipo as tipo_professor FROM usuarios u LEFT JOIN professores p ON u.id = p.usuario_id WHERE u.usuario = %s",
+            (usuario,)
         )
         user = cursor.fetchone()
         conn.close()
 
-        if user:
-            return jsonify({
-                'success': True,
-                'user': {
-                    'id': user['id'],
-                    'nome': user['nome_completo'],
-                    'tipo': user['tipo'],
-                    'disciplina': user.get('disciplina'),
-                    'tipo_professor': user.get('tipo_professor')
-                }
-            })
-        else:
+        if not user:
+            print(f"❌ Usuário {usuario} não encontrado!")
             return jsonify({'success': False, 'message': 'Usuário ou senha incorretos'}), 401
+
+        print(f"✅ Usuário encontrado: {user['usuario']}")
+        print(f"Hash no banco: {user['senha'][:30]}...")
+        print(f"Tipo do hash: {'bcrypt' if user['senha'].startswith('$2b$') else 'MD5'}")
+
+        # Verifica a senha
+        if user['senha'].startswith('$2b$'):
+            print("Verificando com bcrypt...")
+            if bcrypt.checkpw(senha.encode('utf-8'), user['senha'].encode('utf-8')):
+                print("✅ Senha bcrypt OK!")
+            else:
+                print("❌ Senha bcrypt incorreta!")
+                return jsonify({'success': False, 'message': 'Usuário ou senha incorretos'}), 401
+        else:
+            print("Verificando com MD5...")
+            import hashlib
+            senha_md5 = hashlib.md5(senha.encode()).hexdigest()
+            print(f"MD5 gerado: {senha_md5}")
+            print(f"MD5 no banco: {user['senha']}")
+            if user['senha'] != senha_md5:
+                print("❌ Senha MD5 incorreta!")
+                return jsonify({'success': False, 'message': 'Usuário ou senha incorretos'}), 401
+            
+            print("✅ Senha MD5 OK! Convertendo para bcrypt...")
+            nova_senha_hash = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt(12)).decode()
+            conn2 = get_db_connection()
+            cursor2 = conn2.cursor()
+            cursor2.execute("UPDATE usuarios SET senha = %s WHERE id = %s", (nova_senha_hash, user['id']))
+            conn2.commit()
+            conn2.close()
+            print("✅ Senha convertida para bcrypt!")
+
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user['id'],
+                'nome': user['nome_completo'],
+                'tipo': user['tipo'],
+                'disciplina': user.get('disciplina'),
+                'tipo_professor': user.get('tipo_professor')
+            }
+        })
+
     except Exception as e:
-        print("Erro no login:", str(e))
+        print(f"❌ ERRO: {e}")
         traceback.print_exc()
         return jsonify({'success': False, 'message': 'Erro no servidor'}), 500
 
@@ -1315,10 +1361,11 @@ def admin_criar_usuario():
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário já existe'}), 400
         
+        senha_hash = hash_senha(data['senha'])
         cursor.execute("""
             INSERT INTO usuarios (usuario, senha, nome_completo, tipo)
-            VALUES (%s, MD5(%s), %s, %s)
-        """, (data['usuario'], data['senha'], data['nome_completo'], data['tipo']))
+            VALUES (%s, %s, %s, %s)
+        """, (data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
         
         usuario_id = cursor.lastrowid
         
@@ -1369,8 +1416,8 @@ def admin_atualizar_usuario(id):
             params.append(data['usuario'])
         
         if 'senha' in data and data['senha']:
-            updates.append("senha = MD5(%s)")
-            params.append(data['senha'])
+            updates.append("senha = %s")
+            params.append(hash_senha(data['senha']))
         
         if updates:
             params.append(id)
@@ -1630,7 +1677,7 @@ def recuperar_alterar_senha():
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário não encontrado'}), 404
 
-        cursor.execute("UPDATE usuarios SET senha = MD5(%s) WHERE usuario = %s", (nova_senha, usuario))
+        cursor.execute("UPDATE usuarios SET senha = %s WHERE usuario = %s", (hash_senha(nova_senha), usuario))
         cursor.execute("UPDATE recuperacao_senha SET usado = 1 WHERE id = %s", (recuperacao['id'],))
 
         conn.commit()
