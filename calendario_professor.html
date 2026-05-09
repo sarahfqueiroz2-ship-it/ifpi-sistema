@@ -1224,6 +1224,8 @@ function abrirModal(turmaId, dia, horarioId, statusAtual, professorNomeAtual, pr
     }
     
     try {
+        const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+        
         const payload = {
             turma_id: modalData.turmaId,
             dia_semana: modalData.dia,
@@ -1231,7 +1233,8 @@ function abrirModal(turmaId, dia, horarioId, statusAtual, professorNomeAtual, pr
             status: status,
             semana_inicio: modalData.semanaInicio,
             usuario_id: usuarioId,
-            professor_id: professorId  // Adicionar professor_id se disponível
+            professor_id: professorId,
+            usuario_nome: user.nome
         };
         
         const response = await fetch('/calendario_professor/marcar', {

@@ -1247,12 +1247,14 @@ function formatarDataParaInput(data) {
     
 
 
-
-
     async function excluir(id) {
         if (!confirm('Tem certeza que deseja excluir este registro?')) return;
         try {
-            const resp = await fetch(`${API}/registros/${id}`, { method: 'DELETE' });
+            const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            
+            const resp = await fetch(`${API}/registros/${id}?usuario_id=${user.id}&usuario_nome=${user.nome}`, { 
+                method: 'DELETE' 
+            });
             const data = await resp.json();
             if (data.success) { 
                 alert('Registro excluído com sucesso!'); 
@@ -1264,6 +1266,7 @@ function formatarDataParaInput(data) {
             alert('Erro ao conectar com o servidor!'); 
         }
     }
+
 
   function limparFiltros() {
         document.getElementById('dataInicio').value = '';

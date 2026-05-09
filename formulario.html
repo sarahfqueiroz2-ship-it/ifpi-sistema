@@ -1002,11 +1002,15 @@ if (dataValue) {
             const tipoProfessor = document.getElementById('tipoProfessor').value;
             const horariosLista = Array.from(horariosSelecionados).map(cb => cb.value);
             
+            const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            
             const payload = {
                 professor_id: parseInt(professorId), data: data, tipo: tipoRegistro.value,
                 curso_id: parseInt(cursoId), serie: serie, quantidade: parseInt(quantidade),
                 horarios: horariosLista, disciplina: disciplina, observacoes: observacoes,
-                tipo_professor: tipoProfessor
+                tipo_professor: tipoProfessor,
+                usuario_id: user.id,
+                usuario_nome: user.nome
             };
             
             let url = `${API}/registros`;

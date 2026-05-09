@@ -156,6 +156,25 @@ def get_dia_nome(dia_num):
     dias = {1: 'Segunda-feira', 2: 'Terça-feira', 3: 'Quarta-feira', 4: 'Quinta-feira', 5: 'Sexta-feira', 6: 'Sábado'}
     return dias.get(dia_num, 'Dia')
 
+
+# ================== FUNÇÃO DE AUDITORIA ==================
+def registrar_log(usuario_id, usuario_nome, acao, tabela=None, registro_id=None, dados_antes=None, dados_depois=None):
+    try:
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        user_agent = request.headers.get('User-Agent', '')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO logs_auditoria 
+            (usuario_id, usuario_nome, acao, tabela, registro_id, dados_antes, dados_depois, ip, user_agent)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (usuario_id, usuario_nome, acao, tabela, registro_id, dados_antes, dados_depois, ip, user_agent))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Erro ao registrar log: {e}")
+
 def criar_tabelas():
     """Cria as tabelas necessárias no PostgreSQL (Render)"""
     conn = get_db_connection()
@@ -343,6 +362,9 @@ def login():
             conn2.commit()
             conn2.close()
             print("✅ Senha convertida para bcrypt!")
+
+            registrar_log(user['id'], user['nome_completo'], 'LOGIN', 'usuarios', user['id'])
+
 
         return jsonify({
             'success': True,
@@ -540,6 +562,11 @@ def criar_registro():
         conn.commit()
         conn.close()
 
+        # LOG DE AUDITORIA
+        usuario_id = request.args.get('usuario_id') or data.get('usuario_id')
+        usuario_nome = request.args.get('usuario_nome') or data.get('usuario_nome')
+        registrar_log(usuario_id, usuario_nome, 'CRIAR', 'registros', registro_id)
+
         return jsonify({'success': True, 'id': registro_id}), 201
 
     except Exception as e:
@@ -590,6 +617,11 @@ def atualizar_registro(id):
         
         conn.commit()
         conn.close()
+
+        # LOG DE AUDITORIA
+        usuario_id = request.args.get('usuario_id') or data.get('usuario_id')
+        usuario_nome = request.args.get('usuario_nome') or data.get('usuario_nome')
+        registrar_log(usuario_id, usuario_nome, 'EDITAR', 'registros', id)
         
         return jsonify({'success': True})
     except Exception as e:
@@ -611,6 +643,12 @@ def deletar_registro(id):
         
         conn.commit()
         conn.close()
+
+        # LOG DE AUDITORIA
+        usuario_id = request.args.get('usuario_id')
+        usuario_nome = request.args.get('usuario_nome')
+        registrar_log(usuario_id, usuario_nome, 'EXCLUIR', 'registros', id)
+
         return jsonify({'success': True})
     except Exception as e:
         print("Erro ao deletar registro:", str(e))
@@ -1379,6 +1417,11 @@ def admin_criar_usuario():
         
         conn.commit()
         conn.close()
+
+        # LOG DE AUDITORIA
+        admin_id = data.get('admin_id')
+        admin_nome = data.get('admin_nome')
+        registrar_log(admin_id, admin_nome, 'CRIAR_USUARIO', 'usuarios', usuario_id, None, f'usuario: {data["usuario"]}, tipo: {data["tipo"]}')
         
         return jsonify({'success': True, 'message': 'Usuário criado com sucesso', 'id': usuario_id})
     except Exception as e:
@@ -1461,6 +1504,11 @@ def admin_deletar_usuario(id):
         cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
         conn.commit()
         conn.close()
+
+        # LOG DE AUDITORIA
+        usuario_id = request.args.get('admin_id')
+        usuario_nome = request.args.get('admin_nome')
+        registrar_log(usuario_id, usuario_nome, 'EXCLUIR_USUARIO', 'usuarios', id)
         
         return jsonify({'success': True, 'message': 'Usuário excluído com sucesso'})
     except Exception as e:

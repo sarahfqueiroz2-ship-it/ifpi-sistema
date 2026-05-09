@@ -716,9 +716,12 @@
             if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
             
             try {
-                const response = await fetch(`${API}/admin/usuarios/${id}`, {
-                    method: 'DELETE'
-                });
+
+      const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+        
+        const response = await fetch(`${API}/admin/usuarios?usuario_id=${user.id}&usuario_nome=${user.nome}`);
+
+        });
                 const data = await response.json();
                 
                 if (data.success) {
@@ -744,12 +747,16 @@
             const disciplina = document.getElementById('disciplina').value;
             const professorTipo = document.getElementById('professorTipo').value;
             
+            const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            
             const payload = {
                 usuario,
                 nome_completo: nomeCompleto,
                 tipo,
                 disciplina,
-                professor_tipo: professorTipo
+                professor_tipo: professorTipo,
+                admin_id: user.id,
+                admin_nome: user.nome
             };
             
             if (senha) payload.senha = senha;
