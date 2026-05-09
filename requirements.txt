@@ -5,3 +5,4 @@ gunicorn
 requests
 sendgrid
 psycopg2-binary
+bcrypt

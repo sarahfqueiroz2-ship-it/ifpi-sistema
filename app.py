@@ -76,7 +76,7 @@ def get_db_connection():
         return pymysql.connect(
             host='localhost',
             user='root',
-            password='Ifpi@2026#Segura',
+            password="Ifpi@2026#Segura",
             database='ifpi_aulas',
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
@@ -1501,7 +1501,12 @@ def admin_deletar_usuario(id):
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário não encontrado'}), 404
         
+        # Primeiro, deletar da tabela professores (se existir)
+        cursor.execute("DELETE FROM professores WHERE usuario_id = %s", (id,))
+        
+        # Depois, deletar o usuário
         cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
+        
         conn.commit()
         conn.close()
 
