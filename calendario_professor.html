@@ -825,48 +825,49 @@
         window.location.href = '/';
     }
 
-    async function getProfessorLogado() {
-        const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
-        if (user) {
-            if (user.tipo !== 'professor' && user.tipo !== 'coordenador') {
-                alert('Acesso negado. Esta pagina e apenas para professores e coordenadores.');
-                window.location.href = '/pagina-inicial.html';
-                return false;
-            }
-            
-            usuarioId = user.id;
-            professorNome = user.nome;
-            userTipo = user.tipo;
-            
-            if (userTipo === 'professor') {
-                try {
-                    const response = await fetch(`/professor_por_usuario/${usuarioId}`);
-                    const data = await response.json();
-                    professorId = data.id;
-                    console.log('Professor ID carregado:', professorId);
-                } catch (error) {
-                    console.error('Erro ao buscar professor_id:', error);
-                    professorId = null;
-                }
-            } else {
+ async function getProfessorLogado() {
+    const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+    if (user) {
+        if (user.tipo !== 'professor' && user.tipo !== 'coordenador') {
+            alert('Acesso negado. Esta página é apenas para professores e coordenadores.');
+            window.location.href = '/pagina-inicial.html';
+            return false;
+        }
+        
+        usuarioId = user.id;
+        professorNome = user.nome;
+        userTipo = user.tipo;
+        
+        // CORREÇÃO: Coordenador também precisa de professorId para disponibilizar aulas
+        if (userTipo === 'professor' || userTipo === 'coordenador') {
+            try {
+                const response = await fetch(`${API}/professor_por_usuario/${usuarioId}`);
+                const data = await response.json();
+                professorId = data.id;
+                console.log('Professor ID carregado:', professorId, 'para usuário tipo:', userTipo);
+            } catch (error) {
+                console.error('Erro ao buscar professor_id:', error);
                 professorId = null;
             }
-            
-            document.getElementById('userNameDisplay').textContent = user.nome;
-            const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
-            document.getElementById('userAvatarDisplay').textContent = iniciais;
-            
-            let roleText = '';
-            if (user.tipo === 'professor') roleText = 'Professor';
-            else if (user.tipo === 'coordenador') roleText = 'Coordenador';
-            else roleText = 'Usuario';
-            document.getElementById('userRoleDisplay').textContent = roleText;
-            
-            return true;
+        } else {
+            professorId = null;
         }
-        window.location.href = '/';
-        return false;
+        
+        document.getElementById('userNameDisplay').textContent = user.nome;
+        const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+        document.getElementById('userAvatarDisplay').textContent = iniciais;
+        
+        let roleText = '';
+        if (user.tipo === 'professor') roleText = 'Professor';
+        else if (user.tipo === 'coordenador') roleText = 'Coordenador';
+        else roleText = 'Usuario';
+        document.getElementById('userRoleDisplay').textContent = roleText;
+        
+        return true;
     }
+    window.location.href = '/';
+    return false;
+}
 
     // ================== RESUMO DO PROFESSOR ==================
     async function carregarCursosFiltro() {
@@ -891,24 +892,41 @@
     }
 
     async function carregarRegistrosProfessor() {
-    if (!professorId) {
+    // Se for coordenador, carrega todos os registros (ou apenas do coordenador se ele tiver vínculo)
+    if (!professorId && userTipo !== 'coordenador') {
         console.log('Professor ID não disponível, aguardando...');
         return;
     }
     
     try {
-        console.log('Buscando registros para professor ID:', professorId);
-        const response = await fetch(`${API}/registros?professor_id=${professorId}`);
-        const data = await response.json();
+        let url = `${API}/registros`;
         
-        // Filtro de segurança extra
-        let registros = data.registros || [];
-        if (professorId) {
-            registros = registros.filter(r => r.professor_id == professorId);
+        // Se for professor, filtra só os dele
+        if (userTipo === 'professor' && professorId) {
+            url = `${API}/registros?professor_id=${professorId}`;
+            console.log('Buscando registros para professor ID:', professorId);
+        } else if (userTipo === 'coordenador') {
+            // Coordenador vê todos os registros (ou só os do seu departamento se implementado)
+            console.log('Coordenador carregando todos os registros');
         }
         
-        todosRegistrosProfessor = registros;
-        console.log('Registros encontrados (apenas do professor):', todosRegistrosProfessor.length);
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        let registros = data.registros || [];
+        
+        // Filtro de segurança: se for professor, garante que só vê os dele
+        if (userTipo === 'professor' && professorId) {
+            registros = registros.filter(r => r.professor_id == professorId);
+            todosRegistrosProfessor = registros;
+        } else if (userTipo === 'coordenador') {
+            // Coordenador vê todos os registros para ter visão completa
+            todosRegistrosProfessor = registros;
+        } else {
+            todosRegistrosProfessor = registros;
+        }
+        
+        console.log('Registros encontrados:', todosRegistrosProfessor.length);
         filtrarResumo();
     } catch (error) {
         console.error('Erro ao carregar registros:', error);
