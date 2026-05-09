@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs de Auditoria - IFPI Campus Pedro II</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --verde-principal: #2d8659;
+            --verde-escuro: #1a5438;
+            --branco: #ffffff;
+            --cinza-bg: #fafbfc;
+            --cinza-medio: #f5f6f7;
+            --cinza-borda: #e1e4e8;
+            --cinza-texto: #24292e;
+            --cinza-secundario: #586069;
+            --vermelho: #d73a49;
+            --azul: #0366d6;
+            --amarelo: #f9c74f;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cinza-bg);
+            color: var(--cinza-texto);
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: var(--branco);
+            border-right: 1px solid var(--cinza-borda);
+            padding: 24px 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .logo-container {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+        }
+
+        .nav-menu {
+            padding: 0 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            color: var(--cinza-secundario);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--cinza-medio);
+            color: var(--cinza-texto);
+        }
+
+        .nav-item.active {
+            background-color: var(--verde-principal);
+            color: var(--branco);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        .header {
+            position: fixed;
+            left: 260px;
+            right: 0;
+            top: 0;
+            height: 64px;
+            background-color: var(--branco);
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 90;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 16px;
+        }
+
+        .menu-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cinza-texto);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+            display: block;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--cinza-secundario);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--verde-principal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            margin-top: 64px;
+            padding: 32px;
+            min-height: calc(100vh - 64px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cinza-texto);
+        }
+
+        .filters-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .filters-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .filters-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cinza-texto);
+        }
+
+        .filters-grid {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--cinza-texto);
+            margin-bottom: 6px;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid var(--cinza-borda);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            padding: 8px 20px;
+            background-color: var(--verde-principal);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-escuro);
+        }
+
+        .table-card {
+            background-color: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: var(--cinza-medio);
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cinza-secundario);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--cinza-borda);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-login { background-color: #d4edda; color: #155724; }
+        .badge-criar { background-color: #d1ecf1; color: #0c5460; }
+        .badge-editar { background-color: #fff3cd; color: #856404; }
+        .badge-excluir { background-color: #f8d7da; color: #721c24; }
+
+        .logout-section {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--cinza-borda);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--vermelho);
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover {
+            background-color: #fee;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .header {
+                left: 0;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                display: flex;
+            }
+            .filters-grid {
+                flex-direction: column;
+            }
+            .table-container {
+                overflow-x: scroll;
+            }
+            th, td {
+                font-size: 11px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <img src="logo-aside.png" alt="IFPI Campus Pedro II">
+        </div>
+        <nav class="nav-menu" id="navMenu"></nav>
+    </aside>
+
+    <header class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+        <div class="header-title">Logs de Auditoria</div>
+        <div class="user-section">
+            <div class="user-info">
+                <span class="user-name" id="userNameDisplay">Carregando...</span>
+                <span class="user-role" id="userRoleDisplay"></span>
+            </div>
+            <div class="user-avatar" id="userAvatarDisplay">--</div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Logs de Auditoria</h1>
+            </div>
+
+            <div class="filters-card">
+                <div class="filters-header">
+                    <h2 class="filters-title">Filtros</h2>
+                    <button class="btn-primary" onclick="carregarLogs()">Atualizar</button>
+                </div>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Acao</label>
+                        <select id="filtroAcao" class="filter-select">
+                            <option value="">Todas</option>
+                            <option value="LOGIN">Login</option>
+                            <option value="CRIAR">Criar Registro</option>
+                            <option value="EDITAR">Editar Registro</option>
+                            <option value="EXCLUIR">Excluir Registro</option>
+                            <option value="CRIAR_USUARIO">Criar Usuario</option>
+                            <option value="EDITAR_USUARIO">Editar Usuario</option>
+                            <option value="EXCLUIR_USUARIO">Excluir Usuario</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Data Inicial</label>
+                        <input type="date" id="filtroDataInicio" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Data Final</label>
+                        <input type="date" id="filtroDataFim" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Usuario</label>
+                        <input type="text" id="filtroUsuario" class="filter-input" placeholder="Nome do usuario">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">Registros de Auditoria</h2>
+                </div>
+                <div class="table-container">
+                    <table id="tabelaLogs">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Usuario</th>
+                                <th>Acao</th>
+                                <th>Tabela</th>
+                                <th>ID Registro</th>
+                                <th>IP</th>
+                                <th>Detalhes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="7" class="loading">Carregando...</td><\/tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = 'https://ifpi-sistema.onrender.com';
+        let user = null;
+
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMenu() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', toggleMenu);
+        }
+        if (overlay) {
+            overlay.addEventListener('click', closeMenu);
+        }
+
+        function gerarMenu() {
+            const userData = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            const tipo = userData ? userData.tipo : null;
+            
+            const navMenu = document.getElementById('navMenu');
+            if (!navMenu) return;
+            
+            let links = [];
+            
+            if (tipo === 'professor') {
+                links = [
+                    { href: 'calendario_professor.html', icon: 'M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Meu Calendario' }
+                ];
+            }
+            else if (tipo === 'coordenador') {
+                links = [
+                    { href: 'pagina-inicial.html', icon: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z', text: 'Dashboard' },
+                    { href: 'formulario.html', icon: 'M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm4 2a1 1 0 000 2h4a1 1 0 100-2H8zm0 4a1 1 0 100 2h4a1 1 0 100-2H8z', text: 'Novo Registro' },
+                    { href: 'historico-de-registro.html', icon: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Historico' },
+                    { href: 'pagina-administrativa.html', icon: 'M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm4 2a1 1 0 000 2h4a1 1 0 100-2H8zm0 4a1 1 0 100 2h4a1 1 0 100-2H8z', text: 'Controle de Aulas' },
+                    { href: 'calendario_professor.html', icon: 'M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Calendario de Aulas' }
+                ];
+            }
+            else if (tipo === 'admin') {
+                links = [
+                    { href: 'pagina-inicial.html', icon: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z', text: 'Dashboard' },
+                    { href: 'formulario.html', icon: 'M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm4 2a1 1 0 000 2h4a1 1 0 100-2H8zm0 4a1 1 0 100 2h4a1 1 0 100-2H8z', text: 'Novo Registro' },
+                    { href: 'historico-de-registro.html', icon: 'M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z', text: 'Historico' },
+                    { href: 'pagina-administrativa.html', icon: 'M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm4 2a1 1 0 000 2h4a1 1 0 100-2H8zm0 4a1 1 0 100 2h4a1 1 0 100-2H8z', text: 'Controle de Aulas' },
+                    { href: 'admin_usuarios.html', icon: 'M12 4a4 4 0 10-8 0 4 4 0 008 0zm-4 6a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zm7 0a3 3 0 00-3 3v1h6v-1a3 3 0 00-3-3z', text: 'Gerenciar Usuarios' }
+                ];
+            }
+            
+            let html = '';
+            links.forEach(link => {
+                const isActive = window.location.pathname.includes(link.href.replace('.html', ''));
+                const activeClass = isActive ? 'active' : '';
+                html += '<a href="' + link.href + '" class="nav-item ' + activeClass + '">';
+                html += '<svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20"><path d="' + link.icon + '"/></svg>';
+                                html += link.text;
+                html += '</a>';
+            });
+            
+            html += '<div class="logout-section">';
+            html += '<a href="javascript:void(0)" onclick="logout()" class="btn-logout">';
+            html += '<svg class="logout-icon" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">';
+            html += '<path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>';
+            html += 'Sair do Sistema</a></div>';
+            
+            navMenu.innerHTML = html;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            sessionStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function formatarData(dataISO) {
+            if (!dataISO) return '-';
+            try {
+                const data = new Date(dataISO);
+                return data.toLocaleString('pt-BR');
+            } catch(e) {
+                return dataISO;
+            }
+        }
+
+        function getBadgeClass(acao) {
+            if (acao === 'LOGIN') return 'badge-login';
+            if (acao === 'CRIAR' || acao === 'CRIAR_USUARIO') return 'badge-criar';
+            if (acao === 'EDITAR' || acao === 'EDITAR_USUARIO') return 'badge-editar';
+            if (acao === 'EXCLUIR' || acao === 'EXCLUIR_USUARIO') return 'badge-excluir';
+            return 'badge-criar';
+        }
+
+        async function carregarLogs() {
+            const tbody = document.querySelector('#tabelaLogs tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="loading">Carregando...</td></tr>';
+            
+            const acao = document.getElementById('filtroAcao').value;
+            const dataInicio = document.getElementById('filtroDataInicio').value;
+            const dataFim = document.getElementById('filtroDataFim').value;
+            const usuario = document.getElementById('filtroUsuario').value;
+            
+            let url = `${API}/admin/logs?usuario_id=${user.id}`;
+            if (acao) url += `&acao=${acao}`;
+            if (dataInicio) url += `&data_inicio=${dataInicio}`;
+            if (dataFim) url += `&data_fim=${dataFim}`;
+            if (usuario) url += `&usuario=${usuario}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.logs) {
+                    renderizarTabela(data.logs);
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="loading">Nenhum registro encontrado</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Erro ao carregar logs</td></tr>';
+            }
+        }
+
+        function renderizarTabela(logs) {
+            const tbody = document.querySelector('#tabelaLogs tbody');
+            tbody.innerHTML = '';
+            
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Nenhum registro encontrado</td></tr>';
+                return;
+            }
+            
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                const badgeClass = getBadgeClass(log.acao);
+                
+                let acaoDisplay = log.acao;
+                if (acaoDisplay === 'CRIAR_USUARIO') acaoDisplay = 'Criar Usuario';
+                if (acaoDisplay === 'EDITAR_USUARIO') acaoDisplay = 'Editar Usuario';
+                if (acaoDisplay === 'EXCLUIR_USUARIO') acaoDisplay = 'Excluir Usuario';
+                
+                row.innerHTML = `
+                    <td>${formatarData(log.created_at)}</td>
+                    <td>${log.usuario_nome || '-'}</td>
+                    <td><span class="badge ${badgeClass}">${acaoDisplay}</span></td>
+                    <td>${log.tabela || '-'}</td>
+                    <td>${log.registro_id || '-'}</td>
+                    <td>${log.ip || '-'}</td>
+                    <td title="${log.dados_depois || ''}">${log.dados_depois ? log.dados_depois.substring(0, 50) : '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            if (user.tipo !== 'admin') {
+                alert('Acesso negado. Apenas administradores podem acessar esta pagina.');
+                window.location.href = 'pagina-inicial.html';
+                return;
+            }
+            
+            document.getElementById('userNameDisplay').textContent = user.nome;
+            const iniciais = user.nome.split(' ').map(n => n[0]).join('').substring(0, 2);
+            document.getElementById('userAvatarDisplay').textContent = iniciais;
+            document.getElementById('userRoleDisplay').textContent = 'Administrador';
+            
+            gerarMenu();
+            carregarLogs();
+            
+            document.getElementById('filtroAcao').addEventListener('change', carregarLogs);
+            document.getElementById('filtroDataInicio').addEventListener('change', carregarLogs);
+            document.getElementById('filtroDataFim').addEventListener('change', carregarLogs);
+            document.getElementById('filtroUsuario').addEventListener('input', carregarLogs);
+        });
+    </script>
+</body>
+</html>
