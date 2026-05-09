@@ -891,42 +891,28 @@
         }
     }
 
-    async function carregarRegistrosProfessor() {
-    // Se for coordenador, carrega todos os registros (ou apenas do coordenador se ele tiver vínculo)
-    if (!professorId && userTipo !== 'coordenador') {
-        console.log('Professor ID não disponível, aguardando...');
+   async function carregarRegistrosProfessor() {
+    // Só carrega se for professor COM professorId
+    if (userTipo !== 'professor' || !professorId) {
+        console.log('Resumo disponível apenas para professores logados');
+        const tbody = document.getElementById('tabelaResumo');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="8" class="loading">Resumo disponível apenas para professores</td><\/tr>';
+        }
         return;
     }
     
     try {
-        let url = `${API}/registros`;
-        
-        // Se for professor, filtra só os dele
-        if (userTipo === 'professor' && professorId) {
-            url = `${API}/registros?professor_id=${professorId}`;
-            console.log('Buscando registros para professor ID:', professorId);
-        } else if (userTipo === 'coordenador') {
-            // Coordenador vê todos os registros (ou só os do seu departamento se implementado)
-            console.log('Coordenador carregando todos os registros');
-        }
-        
-        const response = await fetch(url);
+        console.log('Buscando registros para professor ID:', professorId);
+        const response = await fetch(`${API}/registros?professor_id=${professorId}`);
         const data = await response.json();
         
         let registros = data.registros || [];
+        // Filtro de segurança extra
+        registros = registros.filter(r => r.professor_id == professorId);
         
-        // Filtro de segurança: se for professor, garante que só vê os dele
-        if (userTipo === 'professor' && professorId) {
-            registros = registros.filter(r => r.professor_id == professorId);
-            todosRegistrosProfessor = registros;
-        } else if (userTipo === 'coordenador') {
-            // Coordenador vê todos os registros para ter visão completa
-            todosRegistrosProfessor = registros;
-        } else {
-            todosRegistrosProfessor = registros;
-        }
-        
-        console.log('Registros encontrados:', todosRegistrosProfessor.length);
+        todosRegistrosProfessor = registros;
+        console.log('Registros encontrados (apenas do professor):', todosRegistrosProfessor.length);
         filtrarResumo();
     } catch (error) {
         console.error('Erro ao carregar registros:', error);
@@ -1337,17 +1323,23 @@
             await carregarCursosFiltro();
             
             // Aguardar um pouco para garantir que professorId foi carregado
-            setTimeout(async () => {
-                if (professorId) {
-                    await carregarRegistrosProfessor();
-                } else {
-                    console.log('Professor ID não disponível para carregar resumo');
-                    const tbody = document.getElementById('tabelaResumo');
-                    if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="8" class="loading">Você não possui registros de aulas ainda<\/td><\/tr>';
-                    }
-                }
-            }, 500);
+setTimeout(async () => {
+    if (userTipo === 'professor' && professorId) {
+        await carregarRegistrosProfessor();
+    } else if (userTipo === 'coordenador') {
+        console.log('Coordenador: resumo de aulas não disponível');
+        const tbody = document.getElementById('tabelaResumo');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="8" class="loading">Resumo disponível apenas para professores</td><\/tr>';
+        }
+    } else {
+        console.log('Professor ID não disponível para carregar resumo');
+        const tbody = document.getElementById('tabelaResumo');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="8" class="loading">Você não possui registros de aulas ainda</td><\/tr>';
+        }
+    }
+}, 500);
             
             // Eventos dos filtros de resumo
             const btnFiltrar = document.getElementById('btnFiltrarResumo');
