@@ -712,78 +712,80 @@
             document.getElementById('modalUsuario').style.display = 'flex';
         }
 
-        async function excluirUsuario(id) {
-            if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-            
-            try {
 
-      const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+async function excluirUsuario(id) {
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+    
+    try {
+        const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
         
-        const response = await fetch(`${API}/admin/usuarios?usuario_id=${user.id}&usuario_nome=${user.nome}`);
-
+        const response = await fetch(`${API}/admin/usuarios/${id}?admin_id=${user.id}&admin_nome=${user.nome}`, {
+            method: 'DELETE'
         });
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('Usuário excluído com sucesso!');
-                    carregarUsuarios();
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao excluir usuário');
-            }
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Usuário excluído com sucesso!');
+            carregarUsuarios();
+        } else {
+            alert('Erro: ' + data.message);
         }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir usuário');
+    }
+}
 
-        document.getElementById('formUsuario')?.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const id = document.getElementById('usuarioId').value;
-            const usuario = document.getElementById('usuario').value;
-            const senha = document.getElementById('senha').value;
-            const nomeCompleto = document.getElementById('nomeCompleto').value;
-            const tipo = document.getElementById('tipo').value;
-            const disciplina = document.getElementById('disciplina').value;
-            const professorTipo = document.getElementById('professorTipo').value;
-            
-            const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
-            
-            const payload = {
-                usuario,
-                nome_completo: nomeCompleto,
-                tipo,
-                disciplina,
-                professor_tipo: professorTipo,
-                admin_id: user.id,
-                admin_nome: user.nome
-            };
-            
-            if (senha) payload.senha = senha;
-            
-            const method = id ? 'PUT' : 'POST';
-            const url = id ? `${API}/admin/usuarios/${id}` : `${API}/admin/usuarios`;
-            
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert(id ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
-                    fecharModal();
-                    carregarUsuarios();
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao salvar usuário');
-            }
+
+document.getElementById('formUsuario')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+        const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+        
+        const id = document.getElementById('usuarioId').value;
+        const usuario = document.getElementById('usuario').value;
+        const senha = document.getElementById('senha').value;
+        const nomeCompleto = document.getElementById('nomeCompleto').value;
+        const tipo = document.getElementById('tipo').value;
+        const disciplina = document.getElementById('disciplina').value;
+        const professorTipo = document.getElementById('professorTipo').value;
+        
+        const payload = {
+            usuario,
+            nome_completo: nomeCompleto,
+            tipo,
+            disciplina,
+            professor_tipo: professorTipo,
+            admin_id: user.id,
+            admin_nome: user.nome
+        };
+        
+        if (senha) payload.senha = senha;
+        
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API}/admin/usuarios/${id}` : `${API}/admin/usuarios`;
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(id ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
+            fecharModal();
+            carregarUsuarios();
+        } else {
+            alert('Erro: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar usuário');
+    }
+});
+
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
