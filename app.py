@@ -1458,7 +1458,12 @@ def admin_deletar_usuario(id):
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário não encontrado'}), 404
         
+        # Primeiro, deletar da tabela professores (se existir)
+        cursor.execute("DELETE FROM professores WHERE usuario_id = %s", (id,))
+        
+        # Depois, deletar o usuário
         cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
+        
         conn.commit()
         conn.close()
         
