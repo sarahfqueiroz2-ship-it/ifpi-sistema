@@ -961,7 +961,7 @@ body {
     <button class="btn-scroll" onclick="scrollTabela('esquerda')">
         ◀◀ Voltar
     </button>
-    <span class="scroll-indicator" id="scrollIndicator">↔️ Arraste ou use os botões</span>
+    <span class="scroll-indicator" id="scrollIndicator"> Arraste ou use os botões</span>
     <button class="btn-scroll" onclick="scrollTabela('direita')">
         Avançar ▶▶
     </button>
@@ -1418,16 +1418,16 @@ function atualizarIndicadorScroll(container) {
     const currentScroll = container.scrollLeft;
     
     if (maxScroll <= 0) {
-        indicator.textContent = '✅ Tabela totalmente visível';
+        indicator.textContent = 'Tabela totalmente visível';
         indicator.style.color = 'var(--verde-principal)';
     } else if (currentScroll <= 5) {
-        indicator.textContent = '👉 Arraste para direita ou clique em "Avançar"';
+        indicator.textContent = ' Arraste para direita ou clique em "Avançar"';
         indicator.style.color = 'var(--cinza-secundario)';
     } else if (currentScroll >= maxScroll - 5) {
-        indicator.textContent = '👈 Arraste para esquerda ou clique em "Voltar"';
+        indicator.textContent = 'Arraste para esquerda ou clique em "Voltar"';
         indicator.style.color = 'var(--cinza-secundario)';
     } else {
-        indicator.textContent = '↔️ Use os botões ou arraste para navegar';
+        indicator.textContent = ' Use os botões ou arraste para navegar';
         indicator.style.color = 'var(--cinza-secundario)';
     }
 }
