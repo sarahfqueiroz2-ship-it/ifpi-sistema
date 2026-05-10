@@ -1503,15 +1503,23 @@ def admin_deletar_usuario(id):
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário não encontrado'}), 404
         
-        # Primeiro, verificar se é professor e tem registros
+        # Verificar se é professor
         cursor.execute("SELECT id FROM professores WHERE usuario_id = %s", (id,))
         professor = cursor.fetchone()
         
         if professor:
-            # Deletar os registros do professor primeiro
-            cursor.execute("DELETE FROM registros WHERE professor_id = %s", (professor['id'],))
-            # Deletar da tabela professores
-            cursor.execute("DELETE FROM professores WHERE usuario_id = %s", (id,))
+            # Buscar todos os registros do professor
+            cursor.execute("SELECT id FROM registros WHERE professor_id = %s", (professor['id'],))
+            registros = cursor.fetchall()
+            
+            for reg in registros:
+                # Deletar horários de cada registro
+                cursor.execute("DELETE FROM registro_horarios WHERE registro_id = %s", (reg['id'],))
+                # Deletar o registro
+                cursor.execute("DELETE FROM registros WHERE id = %s", (reg['id'],))
+            
+            # Deletar o professor
+            cursor.execute("DELETE FROM professores WHERE id = %s", (professor['id'],))
         else:
             # Deletar da tabela professores (se existir)
             cursor.execute("DELETE FROM professores WHERE usuario_id = %s", (id,))
