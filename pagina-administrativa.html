@@ -798,88 +798,89 @@ function logout() {
     }
 
     function aplicarFiltros() {
-        const profSelecionado = document.getElementById('filtroProfessor').value;
-        const dataInicial = document.getElementById('filtroDataInicial').value;
-        const dataFinal = document.getElementById('filtroDataFinal').value;
+    const profSelecionado = document.getElementById('filtroProfessor').value;
+    const dataInicial = document.getElementById('filtroDataInicial').value;
+    const dataFinal = document.getElementById('filtroDataFinal').value;
 
-        let registrosFiltrados = [...todosRegistros];
+    let registrosFiltrados = [...todosRegistros];
 
-        if (profSelecionado) {
-            registrosFiltrados = registrosFiltrados.filter(r => r.professor_nome === profSelecionado);
-        }
-
-        if (dataInicial) {
-            const dataInicioObj = new Date(dataInicial + 'T00:00:00');
-            registrosFiltrados = registrosFiltrados.filter(r => {
-                const dataReg = new Date(r.data);
-                return dataReg >= dataInicioObj;
-            });
-        }
-
-        if (dataFinal) {
-            const dataFimObj = new Date(dataFinal + 'T23:59:59');
-            registrosFiltrados = registrosFiltrados.filter(r => {
-                const dataReg = new Date(r.data);
-                return dataReg <= dataFimObj;
-            });
-        }
-
-        // Agrupar por PROFESSOR + TURMA + DISCIPLINA
-        const gruposMap = new Map();
-
-        registrosFiltrados.forEach(r => {
-            const nome = r.professor_nome;
-            const curso = r.curso_nome || 'Curso não informado';
-            const serie = r.serie || 'Série não informada';
-            const disciplina = r.disciplina || 'Disciplina não informada';
-            
-            if (!nome) return;
-
-            const chave = `${nome}|${curso}|${serie}|${disciplina}`;
-
-            if (!gruposMap.has(chave)) {
-                gruposMap.set(chave, {
-                    professor: nome,
-                    curso: curso,
-                    serie: serie,
-                    disciplina: disciplina,
-                    totalAulas: 0,
-                    antecipadas: 0,
-                    reposicoes: 0,
-                    ausencias: 0
-                });
-            }
-
-            const grupo = gruposMap.get(chave);
-            const qtd = r.quantidade || 0;
-
-            grupo.totalAulas += qtd;
-
-            const tipo = r.tipo ? r.tipo.toLowerCase() : '';
-
-            if (tipo === 'antecipacao' || tipo === 'antecipação') {
-                grupo.antecipadas += qtd;
-            } else if (tipo === 'reposicao' || tipo === 'reposição') {
-                grupo.reposicoes += qtd;
-            } else if (tipo === 'ausencia' || tipo === 'ausência') {
-                grupo.ausencias += qtd;
-            }
-        });
-
-        const grupos = Array.from(gruposMap.values());
-        renderizarTabela(grupos);
-
-        const countSpan = document.getElementById('resultadoCount');
-        if (!countSpan) {
-            const newSpan = document.createElement('span');
-            newSpan.id = 'resultadoCount';
-            newSpan.style.marginLeft = '20px';
-            newSpan.style.fontSize = '14px';
-            newSpan.style.color = 'var(--cinza-secundario)';
-            document.querySelector('.table-header').appendChild(newSpan);
-        }
-        document.getElementById('resultadoCount').textContent = `${grupos.length} registros encontrados`;
+    if (profSelecionado) {
+        registrosFiltrados = registrosFiltrados.filter(r => r.professor_nome === profSelecionado);
     }
+
+    if (dataInicial) {
+        const dataInicioObj = new Date(dataInicial + 'T00:00:00');
+        registrosFiltrados = registrosFiltrados.filter(r => {
+            const dataReg = new Date(r.data);
+            return dataReg >= dataInicioObj;
+        });
+    }
+
+    if (dataFinal) {
+        const dataFimObj = new Date(dataFinal + 'T23:59:59');
+        registrosFiltrados = registrosFiltrados.filter(r => {
+            const dataReg = new Date(r.data);
+            return dataReg <= dataFimObj;
+        });
+    }
+
+    // Agrupar por PROFESSOR + CURSO + SÉRIE + DISCIPLINA (NORMALIZADO)
+    const gruposMap = new Map();
+
+    registrosFiltrados.forEach(r => {
+        const nome = r.professor_nome;
+        const curso = (r.curso_nome || 'Curso não informado').trim().toLowerCase();
+        const serie = (r.serie || 'Série não informada').trim();
+        // Normaliza a disciplina: remove espaços extras e converte para lowercase
+        const disciplina = (r.disciplina || 'Disciplina não informada').trim().toLowerCase().replace(/\s+/g, ' ');
+        
+        if (!nome) return;
+
+        const chave = `${nome}|${curso}|${serie}|${disciplina}`;
+
+        if (!gruposMap.has(chave)) {
+            gruposMap.set(chave, {
+                professor: nome,
+                curso: r.curso_nome || 'Curso não informado',
+                serie: serie,
+                disciplina: r.disciplina || 'Disciplina não informada',
+                totalAulas: 0,
+                antecipadas: 0,
+                reposicoes: 0,
+                ausencias: 0
+            });
+        }
+
+        const grupo = gruposMap.get(chave);
+        const qtd = r.quantidade || 0;
+
+        grupo.totalAulas += qtd;
+
+        const tipo = r.tipo ? r.tipo.toLowerCase() : '';
+
+        if (tipo === 'antecipacao' || tipo === 'antecipação') {
+            grupo.antecipadas += qtd;
+        } else if (tipo === 'reposicao' || tipo === 'reposição') {
+            grupo.reposicoes += qtd;
+        } else if (tipo === 'ausencia' || tipo === 'ausência') {
+            grupo.ausencias += qtd;
+        }
+    });
+
+    const grupos = Array.from(gruposMap.values());
+    renderizarTabela(grupos);
+
+    const countSpan = document.getElementById('resultadoCount');
+    if (!countSpan) {
+        const newSpan = document.createElement('span');
+        newSpan.id = 'resultadoCount';
+        newSpan.style.marginLeft = '20px';
+        newSpan.style.fontSize = '14px';
+        newSpan.style.color = 'var(--cinza-secundario)';
+        document.querySelector('.table-header').appendChild(newSpan);
+    }
+    document.getElementById('resultadoCount').textContent = `${grupos.length} registros encontrados`;
+}
 
     function renderizarTabela(grupos) {
         const tbody = document.querySelector('#professoresTable tbody');
