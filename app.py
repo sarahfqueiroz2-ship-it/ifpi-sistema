@@ -107,7 +107,16 @@ def serializar_registro(registro):
 
 def get_semana_atual():
     hoje = datetime.now().date()
-    return hoje - timedelta(days=hoje.weekday())
+    agora = datetime.now()
+    
+    # Se for sábado após 18h, já considerar a próxima semana
+    if hoje.weekday() == 5 and agora.hour >= 18:
+        return hoje + timedelta(days=2)  # Pula para segunda-feira da próxima semana
+    # Se for domingo a partir de 00h, considerar a próxima semana
+    elif hoje.weekday() == 6:
+        return hoje + timedelta(days=1)  # Pula para segunda-feira da próxima semana
+    else:
+        return hoje - timedelta(days=hoje.weekday())
 
 def get_professor_id_by_usuario_id(usuario_id):
     try:
@@ -1260,12 +1269,21 @@ def marcar_horario():
 @app.route('/calendario_professor/reset_semanal', methods=['POST'])
 def reset_semanal():
     try:
-        semana_atual = get_semana_atual().strftime('%Y-%m-%d')
+        hoje = datetime.now().date()
+        agora = datetime.now()
+        
+        # Determinar a data de início da semana atual (para manter)
+        if hoje.weekday() == 5 and agora.hour >= 18:
+            semana_inicio = hoje + timedelta(days=2)
+        elif hoje.weekday() == 6:
+            semana_inicio = hoje + timedelta(days=1)
+        else:
+            semana_inicio = hoje - timedelta(days=hoje.weekday())
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("DELETE FROM calendario_marcacoes WHERE semana_inicio < %s", (semana_atual,))
+        cursor.execute("DELETE FROM calendario_marcacoes WHERE semana_inicio < %s", (semana_inicio,))
         deletados = cursor.rowcount
         conn.commit()
         conn.close()
