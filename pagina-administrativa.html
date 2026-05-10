@@ -957,101 +957,123 @@ function logout() {
         aplicarFiltros();
     }
 
-    function gerarRelatorio() {
-        const profSelecionado = document.getElementById('filtroProfessor').value;
-        const dataInicial = document.getElementById('filtroDataInicial').value;
-        const dataFinal = document.getElementById('filtroDataFinal').value;
+   
+function gerarRelatorio() {
+    const profSelecionado = document.getElementById('filtroProfessor').value;
+    const dataInicial = document.getElementById('filtroDataInicial').value;
+    const dataFinal = document.getElementById('filtroDataFinal').value;
 
-        let registrosFiltrados = [...todosRegistros];
+    let registrosFiltrados = [...todosRegistros];
 
-        if (profSelecionado) {
-            registrosFiltrados = registrosFiltrados.filter(r => r.professor_nome === profSelecionado);
-        }
-
-        if (dataInicial) {
-            const dataInicioObj = new Date(dataInicial + 'T00:00:00');
-            registrosFiltrados = registrosFiltrados.filter(r => {
-                const dataReg = new Date(r.data);
-                return dataReg >= dataInicioObj;
-            });
-        }
-
-        if (dataFinal) {
-            const dataFimObj = new Date(dataFinal + 'T23:59:59');
-            registrosFiltrados = registrosFiltrados.filter(r => {
-                const dataReg = new Date(r.data);
-                return dataReg <= dataFimObj;
-            });
-        }
-
-        const gruposMap = new Map();
-        registrosFiltrados.forEach(r => {
-            const nome = r.professor_nome;
-            const curso = r.curso_nome || 'Curso não informado';
-            const serie = r.serie || 'Série não informada';
-            const disciplina = r.disciplina || 'Disciplina não informada';
-            if (!nome) return;
-            const chave = `${nome}|${curso}|${serie}|${disciplina}`;
-            if (!gruposMap.has(chave)) {
-                gruposMap.set(chave, { professor: nome, curso: curso, serie: serie, disciplina: disciplina, totalAulas: 0, antecipadas: 0, reposicoes: 0, ausencias: 0 });
-            }
-            const grupo = gruposMap.get(chave);
-            const qtd = r.quantidade || 0;
-            grupo.totalAulas += qtd;
-            const tipo = r.tipo ? r.tipo.toLowerCase() : '';
-            if (tipo === 'antecipacao' || tipo === 'antecipação') grupo.antecipadas += qtd;
-            else if (tipo === 'reposicao' || tipo === 'reposição') grupo.reposicoes += qtd;
-            else if (tipo === 'ausencia' || tipo === 'ausência') grupo.ausencias += qtd;
-        });
-
-        const grupos = Array.from(gruposMap.values());
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-
-        doc.setFontSize(18);
-        doc.setTextColor(45, 134, 89);
-        doc.text('IFPI Campus Pedro II', 14, 15);
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Relatório de Aulas - Professores por Turma e Disciplina', 14, 25);
-
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        const periodoTexto = dataInicial && dataFinal ? `Período: ${dataInicial.split('-').reverse().join('/')} a ${dataFinal.split('-').reverse().join('/')}` : 'Período: Todo o histórico';
-        doc.text(periodoTexto, 14, 33);
-        if (profSelecionado) doc.text(`Professor: ${profSelecionado}`, 14, 39);
-        const dataGeracao = new Date().toLocaleDateString('pt-BR');
-        doc.text(`Gerado em: ${dataGeracao}`, 14, 45);
-
-        const tableColumn = ['Professor', 'Curso', 'Série', 'Disciplina', 'Total', 'Antec', 'Repos', 'Ausen', 'Saldo'];
-        const tableRows = grupos.map(grupo => {
-            const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
-            return [grupo.professor, grupo.curso, grupo.serie, grupo.disciplina, grupo.totalAulas, grupo.antecipadas, grupo.reposicoes, grupo.ausencias, saldo];
-        });
-
-        doc.autoTable({
-            head: [tableColumn],
-            body: tableRows,
-            startY: 50,
-            theme: 'grid',
-            headStyles: { fillColor: [45, 134, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
-            columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 35 }, 2: { cellWidth: 25 }, 3: { cellWidth: 35 }, 4: { cellWidth: 15 }, 5: { cellWidth: 15 }, 6: { cellWidth: 15 }, 7: { cellWidth: 15 }, 8: { cellWidth: 15 } },
-            margin: { left: 10, right: 10 }
-        });
-
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text(`Sistema de Controle de Aulas - IFPI Campus Pedro II - Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-        }
-
-        const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
-        doc.save(nomeArquivo);
+    if (profSelecionado) {
+        registrosFiltrados = registrosFiltrados.filter(r => r.professor_nome === profSelecionado);
     }
 
+    if (dataInicial) {
+        const dataInicioObj = new Date(dataInicial + 'T00:00:00');
+        registrosFiltrados = registrosFiltrados.filter(r => {
+            const dataReg = new Date(r.data);
+            return dataReg >= dataInicioObj;
+        });
+    }
+
+    if (dataFinal) {
+        const dataFimObj = new Date(dataFinal + 'T23:59:59');
+        registrosFiltrados = registrosFiltrados.filter(r => {
+            const dataReg = new Date(r.data);
+            return dataReg <= dataFimObj;
+        });
+    }
+
+    // Agrupar com normalização
+    const gruposMap = new Map();
+    
+    registrosFiltrados.forEach(r => {
+        const nome = r.professor_nome;
+        const curso = (r.curso_nome || 'Curso não informado').trim().toLowerCase();
+        const serie = (r.serie || 'Série não informada').trim();
+        const disciplina = (r.disciplina || 'Disciplina não informada').trim().toLowerCase().replace(/\s+/g, ' ');
+        
+        if (!nome) return;
+        
+        const chave = `${nome}|${curso}|${serie}|${disciplina}`;
+        
+        if (!gruposMap.has(chave)) {
+            gruposMap.set(chave, { 
+                professor: nome, 
+                curso: r.curso_nome || 'Curso não informado', 
+                serie: serie, 
+                disciplina: r.disciplina || 'Disciplina não informada', 
+                totalAulas: 0, 
+                antecipadas: 0, 
+                reposicoes: 0, 
+                ausencias: 0 
+            });
+        }
+        
+        const grupo = gruposMap.get(chave);
+        const qtd = r.quantidade || 0;
+        
+        grupo.totalAulas += qtd;
+        
+        const tipo = r.tipo ? r.tipo.toLowerCase() : '';
+        
+        if (tipo === 'antecipacao' || tipo === 'antecipação') {
+            grupo.antecipadas += qtd;
+        } else if (tipo === 'reposicao' || tipo === 'reposição') {
+            grupo.reposicoes += qtd;
+        } else if (tipo === 'ausencia' || tipo === 'ausência') {
+            grupo.ausencias += qtd;
+        }
+    });
+
+    const grupos = Array.from(gruposMap.values());
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    doc.setFontSize(18);
+    doc.setTextColor(45, 134, 89);
+    doc.text('IFPI Campus Pedro II', 14, 15);
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Relatório de Aulas - Professores por Turma e Disciplina', 14, 25);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const periodoTexto = dataInicial && dataFinal ? `Período: ${dataInicial.split('-').reverse().join('/')} a ${dataFinal.split('-').reverse().join('/')}` : 'Período: Todo o histórico';
+    doc.text(periodoTexto, 14, 33);
+    if (profSelecionado) doc.text(`Professor: ${profSelecionado}`, 14, 39);
+    const dataGeracao = new Date().toLocaleDateString('pt-BR');
+    doc.text(`Gerado em: ${dataGeracao}`, 14, 45);
+
+    const tableColumn = ['Professor', 'Curso', 'Série', 'Disciplina', 'Total', 'Antec', 'Repos', 'Ausen', 'Saldo'];
+    const tableRows = grupos.map(grupo => {
+        const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
+        return [grupo.professor, grupo.curso, grupo.serie, grupo.disciplina, grupo.totalAulas, grupo.antecipadas, grupo.reposicoes, grupo.ausencias, saldo];
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 50,
+        theme: 'grid',
+        headStyles: { fillColor: [45, 134, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 35 }, 2: { cellWidth: 25 }, 3: { cellWidth: 35 }, 4: { cellWidth: 15 }, 5: { cellWidth: 15 }, 6: { cellWidth: 15 }, 7: { cellWidth: 15 }, 8: { cellWidth: 15 } },
+        margin: { left: 10, right: 10 }
+    });
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Sistema de Controle de Aulas - IFPI Campus Pedro II - Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+    }
+
+    const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
+    doc.save(nomeArquivo);
+}
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
         // Gerar o menu
