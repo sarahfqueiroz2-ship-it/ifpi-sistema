@@ -1481,8 +1481,7 @@ def admin_criar_usuario():
 
         admin_id = data.get('admin_id')
         admin_nome = data.get('admin_nome')
-        registrar_log(admin_id, admin_nome, 'CRIAR_USUARIO', 'usu{data["tipo"]}')
-        
+        registrar_log(admin_id, admin_nome, 'CRIAR_USUARIO', 'usuarios', usuario_id, None, f'usuario: {data["usuario"]}, tipo: {data["tipo"]}')        
         return jsonify({'success': True, 'message': 'Usuário criado com sucesso', 'id': usuario_id})
     except Exception as e:
         print(f"Erro ao criar usuário: {e}")
