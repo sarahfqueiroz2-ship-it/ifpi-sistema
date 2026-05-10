@@ -1399,17 +1399,18 @@ def admin_criar_usuario():
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário já existe'}), 400
 
-        
         senha_hash = hash_senha(data['senha'])
-
-        cursor.execute("""
-            INSERT INTO usuarios (usuario, senha, nome_completo, tipo)
-            VALUES (%s, %s, %s, %s)
-        """, (data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
         
-        # Buscar o ID inserido
-        cursor.execute("SELECT currval('usuarios_id_seq')")
-        usuario_id = cursor.fetchone()[0]
+        # Buscar o próximo ID disponível
+        cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM usuarios")
+        novo_id = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            INSERT INTO usuarios (id, usuario, senha, nome_completo, tipo)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (novo_id, data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
+        
+        usuario_id = novo_id
         
         if data['tipo'] == 'professor':
             disciplina = data.get('disciplina', '')
