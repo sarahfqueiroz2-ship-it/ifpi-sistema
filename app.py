@@ -1882,7 +1882,7 @@ def consertar_sequence_professores():
         
         cursor.execute("SELECT MAX(id) FROM professores")
         resultado = cursor.fetchone()
-        max_id = resultado['max_id'] if resultado and resultado['max_id'] else 0
+        max_id = resultado['max'] if resultado and resultado['max'] else 0
         
         novo_valor = max_id + 1 if max_id > 0 else 1
         
