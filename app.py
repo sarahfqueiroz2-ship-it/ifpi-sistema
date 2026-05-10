@@ -1401,18 +1401,14 @@ def admin_criar_usuario():
 
         senha_hash = hash_senha(data['senha'])
         
-        # Buscar o próximo ID disponível
-        cursor.execute("SELECT MAX(id) FROM usuarios")
-        resultado = cursor.fetchone()
-        max_id = resultado[0] if resultado[0] else 0
-        novo_id = max_id + 1
-        
         cursor.execute("""
-            INSERT INTO usuarios (id, usuario, senha, nome_completo, tipo)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (novo_id, data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
+            INSERT INTO usuarios (usuario, senha, nome_completo, tipo)
+            VALUES (%s, %s, %s, %s)
+        """, (data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
         
-        usuario_id = novo_id
+        # Buscar o ID do usuário recém-criado
+        cursor.execute("SELECT id FROM usuarios WHERE usuario = %s", (data['usuario'],))
+        usuario_id = cursor.fetchone()['id']
         
         if data['tipo'] == 'professor':
             disciplina = data.get('disciplina', '')
@@ -1425,7 +1421,6 @@ def admin_criar_usuario():
         conn.commit()
         conn.close()
 
-        # LOG DE AUDITORIA
         admin_id = data.get('admin_id')
         admin_nome = data.get('admin_nome')
         registrar_log(admin_id, admin_nome, 'CRIAR_USUARIO', 'usuarios', usuario_id, None, f'usuario: {data["usuario"]}, tipo: {data["tipo"]}')
