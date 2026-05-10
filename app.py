@@ -109,14 +109,11 @@ def get_semana_atual():
     hoje = datetime.now().date()
     agora = datetime.now()
     
-    # Se for sábado após 18h, já considerar a próxima semana
+    # Se for sábado após 18h, considerar a próxima semana
     if hoje.weekday() == 5 and agora.hour >= 18:
         return hoje + timedelta(days=2)  # Pula para segunda-feira da próxima semana
-    # Se for domingo a partir de 00h, considerar a próxima semana
-    elif hoje.weekday() == 6:
-        return hoje + timedelta(days=1)  # Pula para segunda-feira da próxima semana
     else:
-        return hoje - timedelta(days=hoje.weekday())
+        return hoje - timedelta(days=hoje.weekday())  # Segunda-feira da semana atual
 
 def get_professor_id_by_usuario_id(usuario_id):
     try:
@@ -1272,13 +1269,11 @@ def reset_semanal():
         hoje = datetime.now().date()
         agora = datetime.now()
         
-        # Determinar a data de início da semana atual (para manter)
+        # Determinar a data de início da semana atual
         if hoje.weekday() == 5 and agora.hour >= 18:
-            semana_inicio = hoje + timedelta(days=2)
-        elif hoje.weekday() == 6:
-            semana_inicio = hoje + timedelta(days=1)
+            semana_inicio = hoje + timedelta(days=2)  # Próxima segunda
         else:
-            semana_inicio = hoje - timedelta(days=hoje.weekday())
+            semana_inicio = hoje - timedelta(days=hoje.weekday())  # Segunda atual
         
         conn = get_db_connection()
         cursor = conn.cursor()
