@@ -596,10 +596,11 @@ def criar_registro():
         conn.commit()
         conn.close()
 
-        # LOG DE AUDITORIA
+        # LOG DE AUDITORIA - COM DETALHES
         usuario_id = request.args.get('usuario_id') or data.get('usuario_id')
         usuario_nome = request.args.get('usuario_nome') or data.get('usuario_nome')
-        registrar_log(usuario_id, usuario_nome, 'CRIAR', 'registros', registro_id)
+        detalhes = f'disciplina: {data["disciplina"]}, quantidade: {data["quantidade"]}, tipo: {data["tipo"]}, serie: {data["serie"]}'
+        registrar_log(usuario_id, usuario_nome, 'CRIAR', 'registros', registro_id, None, detalhes)
 
         return jsonify({'success': True, 'id': registro_id}), 201
 
@@ -648,14 +649,15 @@ def atualizar_registro(id):
                     INSERT INTO registro_horarios (registro_id, horario_inicio, horario_fim, ordem)
                     VALUES (%s, %s, %s, %s)
                 """, (id, partes[0] + ':00', partes[1] + ':00', idx))
-        
+
         conn.commit()
         conn.close()
 
-        # LOG DE AUDITORIA
+        # LOG DE AUDITORIA - COM DETALHES
         usuario_id = request.args.get('usuario_id') or data.get('usuario_id')
         usuario_nome = request.args.get('usuario_nome') or data.get('usuario_nome')
-        registrar_log(usuario_id, usuario_nome, 'EDITAR', 'registros', id)
+        detalhes = f'disciplina: {data["disciplina"]}, quantidade: {data["quantidade"]}, tipo: {data["tipo"]}'
+        registrar_log(usuario_id, usuario_nome, 'EDITAR', 'registros', id, None, detalhes)
         
         return jsonify({'success': True})
     except Exception as e:
@@ -678,10 +680,16 @@ def deletar_registro(id):
         conn.commit()
         conn.close()
 
-        # LOG DE AUDITORIA
+        # LOG DE AUDITORIA - COM DETALHES (buscar o registro antes de excluir)
         usuario_id = request.args.get('usuario_id')
         usuario_nome = request.args.get('usuario_nome')
-        registrar_log(usuario_id, usuario_nome, 'EXCLUIR', 'registros', id)
+        
+        # Buscar dados do registro antes de excluir
+        cursor.execute("SELECT disciplina, quantidade, tipo FROM registros WHERE id = %s", (id,))
+        reg = cursor.fetchone()
+        detalhes = f'disciplina: {reg["disciplina"] if reg else "N/A"}, quantidade: {reg["quantidade"] if reg else "N/A"}, tipo: {reg["tipo"] if reg else "N/A"}'
+        
+        registrar_log(usuario_id, usuario_nome, 'EXCLUIR', 'registros', id, detalhes, None)
 
         return jsonify({'success': True})
     except Exception as e:
@@ -1163,7 +1171,9 @@ def marcar_horario():
                     VALUES (%s, %s, %s, %s, %s)
                 """, (data['turma_id'], data['dia_semana'], data['horario_id'], 'vago', data['semana_inicio']))
                 conn.commit()
-                
+
+              # LOG DE AUDITORIA
+                registrar_log(usuario_id, data.get('usuario_nome'), 'MARCAR_HORARIO_VAGO', 'calendario_marcacoes', None, None, f'turma: {data["turma_id"]}, dia: {data["dia_semana"]}, horario: {data["horario_id"]}')
                 # Notificar professores (opcional)
                 cursor.execute("SELECT id FROM professores")
                 professores = cursor.fetchall()
@@ -1190,6 +1200,9 @@ def marcar_horario():
                         WHERE id = %s
                     """, (existente['id'],))
                     conn.commit()
+
+                        # LOG DE AUDITORIA
+                    registrar_log(usuario_id, data.get('usuario_nome'), 'MARCAR_HORARIO_VAGO', 'calendario_marcacoes', None, None, f'turma: {data["turma_id"]}, dia: {data["dia_semana"]}, horario: {data["horario_id"]}')
                     conn.close()
                     return jsonify({'success': True, 'message': 'Horário alterado para VAGO!'})
                 else:
@@ -1201,6 +1214,9 @@ def marcar_horario():
             if existente and existente['status'] == 'vago':
                 cursor.execute("DELETE FROM calendario_marcacoes WHERE id = %s", (existente['id'],))
                 conn.commit()
+                # LOG DE AUDITORIA
+                registrar_log(usuario_id, data.get('usuario_nome'), 'MARCAR_HORARIO_NORMAL', 'calendario_marcacoes', None, None, f'turma: {data["turma_id"]}, dia: {data["dia_semana"]}, horario: {data["horario_id"]}')
+
                 conn.close()
                 return jsonify({'success': True, 'message': 'Horário VAGO removido!'})
             else:
@@ -1216,7 +1232,8 @@ def marcar_horario():
                     WHERE id = %s
                 """, (professor_id, existente['id']))
                 conn.commit()
-                
+              # LOG DE AUDITORIA
+                registrar_log(usuario_id, data.get('usuario_nome'), 'MARCAR_HORARIO_OCUPADO', 'calendario_marcacoes', None, None, f'turma: {data["turma_id"]}, dia: {data["dia_semana"]}, horario: {data["horario_id"]}')
                 # Notificar coordenador
                 cursor.execute("SELECT id FROM usuarios WHERE tipo = 'coordenador'")
                 coordenadores = cursor.fetchall()
@@ -1249,7 +1266,8 @@ def marcar_horario():
                     WHERE id = %s
                 """, (existente['id'],))
                 conn.commit()
-                
+                # LOG DE AUDITORIA
+                registrar_log(usuario_id, data.get('usuario_nome'), 'MARCAR_HORARIO_VAGO', 'calendario_marcacoes', None, None, f'turma: {data["turma_id"]}, dia: {data["dia_semana"]}, horario: {data["horario_id"]}')
                 # Notificar coordenador
                 cursor.execute("SELECT id FROM usuarios WHERE tipo = 'coordenador'")
                 coordenadores = cursor.fetchall()
@@ -1463,7 +1481,7 @@ def admin_criar_usuario():
 
         admin_id = data.get('admin_id')
         admin_nome = data.get('admin_nome')
-        registrar_log(admin_id, admin_nome, 'CRIAR_USUARIO', 'usuarios', usuario_id, None, f'usuario: {data["usuario"]}, tipo: {data["tipo"]}')
+        registrar_log(admin_id, admin_nome, 'CRIAR_USUARIO', 'usu{data["tipo"]}')
         
         return jsonify({'success': True, 'message': 'Usuário criado com sucesso', 'id': usuario_id})
     except Exception as e:
@@ -1571,10 +1589,16 @@ def admin_deletar_usuario(id):
         conn.commit()
         conn.close()
 
-        # LOG DE AUDITORIA
+        # LOG DE AUDITORIA - COM DETALHES
         usuario_id = request.args.get('admin_id')
         usuario_nome = request.args.get('admin_nome')
-        registrar_log(usuario_id, usuario_nome, 'EXCLUIR_USUARIO', 'usuarios', id)
+        
+        # Buscar dados do usuário antes de excluir
+        cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
+        user_excluido = cursor.fetchone()
+        detalhes = f'usuario: {user_excluido["usuario"] if user_excluido else "N/A"}, nome: {user_excluido["nome_completo"] if user_excluido else "N/A"}, tipo: {user_excluido["tipo"] if user_excluido else "N/A"}'
+        
+        registrar_log(usuario_id, usuario_nome, 'EXCLUIR_USUARIO', 'usuarios', id, detalhes, None)
         
         return jsonify({'success': True, 'message': 'Usuário excluído com sucesso'})
     except Exception as e:
