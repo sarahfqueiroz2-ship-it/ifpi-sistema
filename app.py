@@ -1823,13 +1823,33 @@ def admin_visualizar_logs():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Buscar os ultimos 200 logs
-        cursor.execute("""
-            SELECT * FROM logs_auditoria 
-            ORDER BY created_at DESC 
-            LIMIT 200
-        """)
+        # Construir query com filtros
+        query = "SELECT * FROM logs_auditoria WHERE 1=1"
+        params = []
         
+        acao = request.args.get('acao')
+        if acao:
+            query += " AND acao = %s"
+            params.append(acao)
+        
+        data_inicio = request.args.get('data_inicio')
+        if data_inicio:
+            query += " AND created_at >= %s"
+            params.append(data_inicio)
+        
+        data_fim = request.args.get('data_fim')
+        if data_fim:
+            query += " AND created_at <= %s"
+            params.append(data_fim + ' 23:59:59')
+        
+        usuario_filtro = request.args.get('usuario')
+        if usuario_filtro:
+            query += " AND usuario_nome ILIKE %s"
+            params.append(f'%{usuario_filtro}%')
+        
+        query += " ORDER BY created_at DESC LIMIT 200"
+        
+        cursor.execute(query, params)
         logs = cursor.fetchall()
         conn.close()
         
