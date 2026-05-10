@@ -1849,32 +1849,32 @@ def consertar_sequence():
         cursor = conn.cursor()
         
         # Verificar se a tabela tem dados
-        cursor.execute("SELECT COUNT(*) FROM usuarios")
-        count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as total FROM usuarios")
+        resultado = cursor.fetchone()
+        count = resultado['total'] if resultado else 0
         
         if count == 0:
             cursor.execute("ALTER SEQUENCE usuarios_id_seq RESTART WITH 1")
             proximo = 1
         else:
-            cursor.execute("SELECT MAX(id) FROM usuarios")
-            max_id = cursor.fetchone()[0]
-            if max_id is None:
-                max_id = 0
+            cursor.execute("SELECT MAX(id) as max_id FROM usuarios")
+            resultado = cursor.fetchone()
+            max_id = resultado['max_id'] if resultado else 0
             proximo = max_id + 1
             cursor.execute(f"ALTER SEQUENCE usuarios_id_seq RESTART WITH {proximo}")
         
         conn.commit()
         
         # Testar se funcionou
-        cursor.execute("SELECT nextval('usuarios_id_seq')")
-        next_val = cursor.fetchone()[0]
+        cursor.execute("SELECT nextval('usuarios_id_seq') as next_id")
+        next_val = cursor.fetchone()['next_id']
         
         conn.close()
         
-        return f"✅ Sucesso! Total usuarios: {count}, Maior ID: {max_id if count > 0 else 0}, Proximo ID: {next_val}"
+        return f"✅ Sucesso! Total usuarios: {count}, Proximo ID: {next_val}"
     except Exception as e:
         import traceback
-        return f"❌ Erro: {str(e)}\nDetalhes: {traceback.format_exc()}"
+        return f"❌ Erro: {str(e)}"
         
 # ================== INICIALIZAÇÃO ==================
 
