@@ -1401,15 +1401,13 @@ def admin_criar_usuario():
 
         senha_hash = hash_senha(data['senha'])
         
-        # NÃO insere o ID - deixa o PostgreSQL gerar automaticamente
         cursor.execute("""
             INSERT INTO usuarios (usuario, senha, nome_completo, tipo)
             VALUES (%s, %s, %s, %s)
+            RETURNING id
         """, (data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
         
-        # Recupera o ID gerado automaticamente
-        cursor.execute("SELECT currval('usuarios_id_seq')")
-        usuario_id = cursor.fetchone()[0]
+        usuario_id = cursor.fetchone()['id']
         
         if data['tipo'] == 'professor':
             disciplina = data.get('disciplina', '')
