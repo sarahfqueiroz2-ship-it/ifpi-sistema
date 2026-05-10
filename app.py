@@ -1932,6 +1932,27 @@ def consertar_sequence_professores():
         return f"✅ Sequence professores resetada! Maior ID: {max_id}, Próximo ID: {novo_valor}"
     except Exception as e:
         return f"❌ Erro: {str(e)}"
+
+@app.route('/consertar-sequence-notificacoes', methods=['GET'])
+def consertar_sequence_notificacoes():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT MAX(id) FROM notificacoes")
+        resultado = cursor.fetchone()
+        max_id = resultado['max'] if resultado and resultado['max'] else 0
+        
+        novo_valor = max_id + 1 if max_id > 0 else 1
+        
+        cursor.execute(f"ALTER SEQUENCE notificacoes_id_seq RESTART WITH {novo_valor}")
+        conn.commit()
+        
+        conn.close()
+        
+        return f"✅ Sequence notificacoes resetada! Maior ID: {max_id}, Próximo ID: {novo_valor}"
+    except Exception as e:
+        return f"❌ Erro: {str(e)}"
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
