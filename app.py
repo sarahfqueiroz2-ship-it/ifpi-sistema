@@ -665,11 +665,20 @@ def atualizar_registro(id):
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
 @app.route('/registros/<int:id>', methods=['DELETE'])
 def deletar_registro(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Buscar dados do registro antes de excluir (com conexão aberta)
+        cursor.execute("SELECT disciplina, quantidade, tipo FROM registros WHERE id = %s", (id,))
+        reg = cursor.fetchone()
+        
+        detalhes = None
+        if reg:
+            detalhes = f'disciplina: {reg["disciplina"]}, quantidade: {reg["quantidade"]}, tipo: {reg["tipo"]}'
         
         # Primeiro, excluir os horários relacionados
         cursor.execute("DELETE FROM registro_horarios WHERE registro_id = %s", (id,))
@@ -677,25 +686,19 @@ def deletar_registro(id):
         # Depois, excluir o registro
         cursor.execute("DELETE FROM registros WHERE id = %s", (id,))
         
-        conn.commit()
-        conn.close()
-
-        # LOG DE AUDITORIA - COM DETALHES (buscar o registro antes de excluir)
+        # LOG DE AUDITORIA (antes de fechar a conexão)
         usuario_id = request.args.get('usuario_id')
         usuario_nome = request.args.get('usuario_nome')
         
-        # Buscar dados do registro antes de excluir
-        cursor.execute("SELECT disciplina, quantidade, tipo FROM registros WHERE id = %s", (id,))
-        reg = cursor.fetchone()
-        detalhes = f'disciplina: {reg["disciplina"] if reg else "N/A"}, quantidade: {reg["quantidade"] if reg else "N/A"}, tipo: {reg["tipo"] if reg else "N/A"}'
-        
         registrar_log(usuario_id, usuario_nome, 'EXCLUIR', 'registros', id, detalhes, None)
+        
+        conn.commit()
+        conn.close()
 
         return jsonify({'success': True})
     except Exception as e:
         print("Erro ao deletar registro:", str(e))
         return jsonify({'success': False, 'message': str(e)}), 500
-
 # ================== ROTAS DE CURSOS E TURMAS ==================
 
 @app.route('/cursos', methods=['GET'])
@@ -1561,17 +1564,15 @@ def admin_deletar_usuario(id):
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário não encontrado'}), 404
         
+        # Buscar dados do usuário antes de excluir
+        cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
+        usuario_excluido_info = cursor.fetchone()
+        
         # Verificar se é professor
         cursor.execute("SELECT id FROM professores WHERE usuario_id = %s", (id,))
         professor = cursor.fetchone()
         
-        usuario_excluido_info = None
-        
         if professor:
-            # Buscar dados do usuário antes de excluir
-            cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
-            usuario_excluido_info = cursor.fetchone()
-            
             # Buscar todos os registros do professor
             cursor.execute("SELECT id FROM registros WHERE professor_id = %s", (professor['id'],))
             registros = cursor.fetchall()
@@ -1585,16 +1586,13 @@ def admin_deletar_usuario(id):
             # Deletar o professor
             cursor.execute("DELETE FROM professores WHERE id = %s", (professor['id'],))
         else:
-            # Buscar dados do usuário antes de excluir
-            cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
-            usuario_excluido_info = cursor.fetchone()
             # Deletar da tabela professores (se existir)
             cursor.execute("DELETE FROM professores WHERE usuario_id = %s", (id,))
         
         # Depois, deletar o usuário
         cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
         
-        # LOG DE AUDITORIA - fazer antes de fechar a conexão
+        # LOG DE AUDITORIA (antes de fechar a conexão)
         admin_id = request.args.get('admin_id')
         admin_nome = request.args.get('admin_nome')
         
