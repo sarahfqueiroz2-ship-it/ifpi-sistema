@@ -1565,7 +1565,13 @@ def admin_deletar_usuario(id):
         cursor.execute("SELECT id FROM professores WHERE usuario_id = %s", (id,))
         professor = cursor.fetchone()
         
+        usuario_excluido_info = None
+        
         if professor:
+            # Buscar dados do usuário antes de excluir
+            cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
+            usuario_excluido_info = cursor.fetchone()
+            
             # Buscar todos os registros do professor
             cursor.execute("SELECT id FROM registros WHERE professor_id = %s", (professor['id'],))
             registros = cursor.fetchall()
@@ -1579,25 +1585,28 @@ def admin_deletar_usuario(id):
             # Deletar o professor
             cursor.execute("DELETE FROM professores WHERE id = %s", (professor['id'],))
         else:
+            # Buscar dados do usuário antes de excluir
+            cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
+            usuario_excluido_info = cursor.fetchone()
             # Deletar da tabela professores (se existir)
             cursor.execute("DELETE FROM professores WHERE usuario_id = %s", (id,))
         
         # Depois, deletar o usuário
         cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
         
+        # LOG DE AUDITORIA - fazer antes de fechar a conexão
+        admin_id = request.args.get('admin_id')
+        admin_nome = request.args.get('admin_nome')
+        
+        if usuario_excluido_info:
+            detalhes = f'usuario: {usuario_excluido_info["usuario"]}, nome: {usuario_excluido_info["nome_completo"]}, tipo: {usuario_excluido_info["tipo"]}'
+        else:
+            detalhes = f'usuario_id: {id}'
+        
+        registrar_log(admin_id, admin_nome, 'EXCLUIR_USUARIO', 'usuarios', id, detalhes, None)
+        
         conn.commit()
         conn.close()
-
-        # LOG DE AUDITORIA - COM DETALHES
-        usuario_id = request.args.get('admin_id')
-        usuario_nome = request.args.get('admin_nome')
-        
-        # Buscar dados do usuário antes de excluir
-        cursor.execute("SELECT usuario, nome_completo, tipo FROM usuarios WHERE id = %s", (id,))
-        user_excluido = cursor.fetchone()
-        detalhes = f'usuario: {user_excluido["usuario"] if user_excluido else "N/A"}, nome: {user_excluido["nome_completo"] if user_excluido else "N/A"}, tipo: {user_excluido["tipo"] if user_excluido else "N/A"}'
-        
-        registrar_log(usuario_id, usuario_nome, 'EXCLUIR_USUARIO', 'usuarios', id, detalhes, None)
         
         return jsonify({'success': True, 'message': 'Usuário excluído com sucesso'})
     except Exception as e:
