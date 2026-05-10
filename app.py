@@ -1401,14 +1401,15 @@ def admin_criar_usuario():
 
         senha_hash = hash_senha(data['senha'])
         
+        # NÃO insere o ID - deixa o PostgreSQL gerar automaticamente
         cursor.execute("""
             INSERT INTO usuarios (usuario, senha, nome_completo, tipo)
             VALUES (%s, %s, %s, %s)
         """, (data['usuario'], senha_hash, data['nome_completo'], data['tipo']))
         
-        # Buscar o ID do usuário recém-criado
-        cursor.execute("SELECT id FROM usuarios WHERE usuario = %s", (data['usuario'],))
-        usuario_id = cursor.fetchone()['id']
+        # Recupera o ID gerado automaticamente
+        cursor.execute("SELECT currval('usuarios_id_seq')")
+        usuario_id = cursor.fetchone()[0]
         
         if data['tipo'] == 'professor':
             disciplina = data.get('disciplina', '')
@@ -1428,6 +1429,7 @@ def admin_criar_usuario():
         return jsonify({'success': True, 'message': 'Usuário criado com sucesso', 'id': usuario_id})
     except Exception as e:
         print(f"Erro ao criar usuário: {e}")
+        traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/usuarios/<int:id>', methods=['PUT'])
