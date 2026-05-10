@@ -1402,8 +1402,10 @@ def admin_criar_usuario():
         senha_hash = hash_senha(data['senha'])
         
         # Buscar o próximo ID disponível
-        cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 FROM usuarios")
-        novo_id = cursor.fetchone()[0]
+        cursor.execute("SELECT MAX(id) FROM usuarios")
+        resultado = cursor.fetchone()
+        max_id = resultado[0] if resultado[0] else 0
+        novo_id = max_id + 1
         
         cursor.execute("""
             INSERT INTO usuarios (id, usuario, senha, nome_completo, tipo)
@@ -1430,7 +1432,7 @@ def admin_criar_usuario():
         
         return jsonify({'success': True, 'message': 'Usuário criado com sucesso', 'id': usuario_id})
     except Exception as e:
-        print("Erro ao criar usuário:", str(e))
+        print(f"Erro ao criar usuário: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/admin/usuarios/<int:id>', methods=['PUT'])
