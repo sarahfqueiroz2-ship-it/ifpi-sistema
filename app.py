@@ -1849,13 +1849,21 @@ def consertar_sequence():
         cursor = conn.cursor()
         
         cursor.execute("SELECT MAX(id) FROM usuarios")
-        max_id = cursor.fetchone()[0]
+        resultado = cursor.fetchone()
+        max_id = resultado[0] if resultado and resultado[0] else 0
         
-        cursor.execute(f"ALTER SEQUENCE usuarios_id_seq RESTART WITH {max_id + 1}")
+        novo_valor = max_id + 1 if max_id > 0 else 1
+        
+        cursor.execute(f"ALTER SEQUENCE usuarios_id_seq RESTART WITH {novo_valor}")
         conn.commit()
+        
+        # Verifica se funcionou
+        cursor.execute("SELECT nextval('usuarios_id_seq')")
+        prox_id = cursor.fetchone()[0]
+        
         conn.close()
         
-        return f"✅ Sequence resetada! Próximo ID será: {max_id + 1}"
+        return f"✅ Sequence resetada! Maior ID: {max_id}, Próximo ID será: {prox_id}"
     except Exception as e:
         return f"❌ Erro: {e}"
         
