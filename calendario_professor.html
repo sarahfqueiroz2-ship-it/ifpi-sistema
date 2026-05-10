@@ -1357,10 +1357,25 @@ async function recarregarCalendarioAtual(cursoId) {
         navMenu.innerHTML = html;
     }
 
+    async function verificarResetSemanal() {
+    try {
+        const response = await fetch('/calendario_professor/reset_semanal', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        console.log('Reset semanal:', data);
+    } catch (error) {
+        console.error('Erro no reset:', error);
+    }
+}
+
     // ================== INICIALIZAÇÃO ==================
     async function init() {
         const logged = await getProfessorLogado();
         if (logged) {
+
+             await verificarResetSemanal();
+            
             gerarMenu();
             await carregarCursos();
             await carregarCursosFiltro();
