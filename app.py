@@ -1841,6 +1841,24 @@ def admin_visualizar_logs():
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@app.route('/consertar-sequence', methods=['GET'])
+def consertar_sequence():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT MAX(id) FROM usuarios")
+        max_id = cursor.fetchone()[0]
+        
+        cursor.execute(f"ALTER SEQUENCE usuarios_id_seq RESTART WITH {max_id + 1}")
+        conn.commit()
+        conn.close()
+        
+        return f"✅ Sequence resetada! Próximo ID será: {max_id + 1}"
+    except Exception as e:
+        return f"❌ Erro: {e}"
+        
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
