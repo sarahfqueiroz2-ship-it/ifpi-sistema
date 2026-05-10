@@ -1398,9 +1398,10 @@ def admin_criar_usuario():
         if cursor.fetchone():
             conn.close()
             return jsonify({'success': False, 'message': 'Usuário já existe'}), 400
+
         
         senha_hash = hash_senha(data['senha'])
-         cursor.execute("""
+        cursor.execute("""
             INSERT INTO usuarios (usuario, senha, nome_completo, tipo)
             VALUES (%s, %s, %s, %s)
             RETURNING id
