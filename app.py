@@ -1,5 +1,6 @@
 import os
 import bcrypt
+import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, request, jsonify, send_from_directory
@@ -169,13 +170,40 @@ def registrar_log(usuario_id, usuario_nome, acao, tabela=None, registro_id=None,
         ip = request.headers.get('X-Forwarded-For', request.remote_addr)
         user_agent = request.headers.get('User-Agent', '')
         
+        # Capturar dados adicionais
+        dados_adicionais = {
+            'url': request.url,
+            'method': request.method,
+            'user_agent': user_agent,
+            'ip': ip
+        }
+        
+        # Se for uma ação de alteração, capturar o que mudou
+        if dados_antes and dados_depois:
+            # Comparar e listar apenas o que mudou
+            mudancas = []
+            for chave in dados_depois:
+                if chave in dados_antes and dados_antes[chave] != dados_depois[chave]:
+                    mudancas.append(f"{chave}: '{dados_antes[chave]}' -> '{dados_depois[chave]}'")
+            if mudancas:
+                dados_adicionais['mudancas'] = '; '.join(mudancas)
+        
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Adicionar coluna dados_adicionais se não existir
+        try:
+            cursor.execute("ALTER TABLE logs_auditoria ADD COLUMN IF NOT EXISTS dados_adicionais TEXT")
+            conn.commit()
+        except:
+            pass
+        
         cursor.execute("""
             INSERT INTO logs_auditoria 
-            (usuario_id, usuario_nome, acao, tabela, registro_id, dados_antes, dados_depois, ip, user_agent)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (usuario_id, usuario_nome, acao, tabela, registro_id, dados_antes, dados_depois, ip, user_agent))
+            (usuario_id, usuario_nome, acao, tabela, registro_id, dados_antes, dados_depois, ip, user_agent, dados_adicionais)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (usuario_id, usuario_nome, acao, tabela, registro_id, dados_antes, dados_depois, ip, user_agent, json.dumps(dados_adicionais) if dados_adicionais else None))
+        
         conn.commit()
         conn.close()
     except Exception as e:
