@@ -762,7 +762,7 @@ def listar_cursos_com_turmas():
         conn.close()
         
         # Lista de cursos que devem usar MÓDULO em vez de ANO
-                cursos_modulo = [
+      cursos_modulo = [
             'Gastronomia',
             'Restaurante e Bar',
             'Gastronomia PROEJA',
