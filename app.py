@@ -2046,6 +2046,51 @@ def consertar_sequence_notificacoes():
         return f"✅ Sequence notificacoes resetada! Maior ID: {max_id}, Próximo ID: {novo_valor}"
     except Exception as e:
         return f"❌ Erro: {str(e)}"
+@app.route('/admin/criar_modulo_9', methods=['POST'])
+def criar_modulo_9():
+    try:
+        # Proteger com senha ou token
+        token = request.headers.get('X-Admin-Token')
+        if token != 'SEU_TOKEN_SECRETO_AQUI':
+            return jsonify({'success': False, 'message': 'Acesso negado'}), 403
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Buscar ID do curso de Administração
+        cursor.execute("SELECT id FROM cursos WHERE nome = 'Bacharelado em Administração'")
+        curso = cursor.fetchone()
+        
+        if not curso:
+            return jsonify({'success': False, 'message': 'Curso não encontrado'}), 404
+        
+        curso_id = curso['id']
+        
+        # Verificar se módulo 9 já existe
+        cursor.execute("""
+            SELECT id FROM turmas 
+            WHERE curso_id = %s AND modulo = 9
+        """, (curso_id,))
+        
+        existe = cursor.fetchone()
+        
+        if not existe:
+            # Criar módulo 9
+            cursor.execute("""
+                INSERT INTO turmas (curso_id, modulo, turma, ativo)
+                VALUES (%s, 9, 'A', 1)
+            """, (curso_id,))
+            conn.commit()
+            mensagem = "✅ Módulo 9 criado com sucesso!"
+        else:
+            mensagem = "ℹ️ Módulo 9 já existe"
+        
+        conn.close()
+        return jsonify({'success': True, 'message': mensagem})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
