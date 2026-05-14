@@ -762,13 +762,14 @@ def listar_cursos_com_turmas():
         conn.close()
         
         # Lista de cursos que devem usar MÓDULO em vez de ANO
-        cursos_modulo = [
-            'Técnico em Gastronomia',
-            'Técnico em Restaurante e Bar',
-            'Técnico em Gastronomia PROEJA',
+                cursos_modulo = [
             'Gastronomia',
             'Restaurante e Bar',
-            'Gastronomia PROEJA'
+            'Gastronomia PROEJA',
+            'Bacharelado em Administração',
+            'Licenciatura em Ciências Biológicas',
+            'Tecnólogo em Marketing',
+            'Tecnólogo em Análise e Desenvolvimento de Sistemas'
         ]
         
         cursos_dict = {}
