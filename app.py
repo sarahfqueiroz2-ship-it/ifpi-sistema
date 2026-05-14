@@ -2051,7 +2051,7 @@ def criar_modulo_9():
     try:
         # Proteger com senha ou token
         token = request.headers.get('X-Admin-Token')
-        if token != 'SEU_TOKEN_SECRETO_AQUI':
+        if token != 'ifpi@admin#2026':
             return jsonify({'success': False, 'message': 'Acesso negado'}), 403
         
         conn = get_db_connection()
