@@ -761,7 +761,7 @@ def listar_cursos_com_turmas():
         resultados = cursor.fetchall()
         conn.close()
         
-         # Lista de cursos que devem usar MÓDULO em vez de ANO
+        # Lista de cursos que devem usar MÓDULO em vez de ANO
         cursos_modulo = [
             'Gastronomia',
             'Restaurante e Bar',
@@ -771,6 +771,12 @@ def listar_cursos_com_turmas():
             'Tecnólogo em Marketing',
             'Tecnólogo em Análise e Desenvolvimento de Sistemas'
         ]
+        
+        # Configuração de quantidade de módulos por curso
+        cursos_modulos_especificos = {
+            'Bacharelado em Administração': 9  # Este curso terá 9 módulos
+            # Os demais continuarão com 8 módulos
+        }
         
         cursos_dict = {}
         for row in resultados:
@@ -788,11 +794,16 @@ def listar_cursos_com_turmas():
                 usar_modulo = any(curso in row['nome'] for curso in cursos_modulo)
                 
                 if usar_modulo and row['modulo']:
-                    nome_turma = f"{row['modulo']}º Módulo"
+                    # Verificar se tem configuração específica de módulos
+                    max_modulos = cursos_modulos_especificos.get(row['nome'], 8)
+                    
+                    # Se for Administração e módulo for 9, mostra como 9º Módulo
+                    if row['nome'] == 'Bacharelado em Administração' and row['modulo'] == 9:
+                        nome_turma = f"{row['modulo']}º Módulo"
+                    elif usar_modulo:
+                        nome_turma = f"{row['modulo']}º Módulo"
                 elif row['serie']:
                     nome_turma = f"{row['serie']}º Ano"
-                elif row['modulo']:
-                    nome_turma = f"{row['modulo']}º Módulo"
                 else:
                     nome_turma = "Turma"
                 
@@ -806,11 +817,21 @@ def listar_cursos_com_turmas():
         # Ordenar as turmas de cada curso
         for curso_id in cursos_dict:
             turmas = cursos_dict[curso_id]['turmas']
-            turmas.sort(key=lambda x: (
-                0 if x['serie'] else 1,
-                x['serie'] if x['serie'] else 0,
-                int(x['modulo']) if x['modulo'] else 0
-            ))
+            
+            # Função de ordenação personalizada
+            def ordenar_turmas(turma):
+                # Para Administração, ordena por módulo (incluindo 9)
+                if cursos_dict[curso_id]['nome'] == 'Bacharelado em Administração':
+                    return (0, int(turma['modulo']) if turma['modulo'] else 0)
+                else:
+                    # Para outros cursos, ordena por série ou módulo (limitado a 8)
+                    return (
+                        0 if turma['serie'] else 1,
+                        turma['serie'] if turma['serie'] else 0,
+                        int(turma['modulo']) if turma['modulo'] else 0
+                    )
+            
+            turmas.sort(key=ordenar_turmas)
         
         cursos = list(cursos_dict.values())
         return jsonify({'cursos': cursos, 'success': True})
