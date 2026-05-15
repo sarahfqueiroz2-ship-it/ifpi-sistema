@@ -2154,6 +2154,34 @@ def limpar_turma_extra():
     except Exception as e:
         return f"❌ Erro: {str(e)}"
 
+
+@app.route('/admin/remover_turma_fantasma', methods=['GET'])
+def remover_turma_fantasma():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar qual curso tem a turma ID 1
+        cursor.execute("SELECT curso_id, modulo FROM turmas WHERE id = 1")
+        turma = cursor.fetchone()
+        
+        if not turma:
+            return "ℹ️ Turma ID 1 não encontrada."
+        
+        info = f"Turma ID 1 pertence ao curso ID {turma['curso_id']}, módulo: {turma['modulo']}"
+        
+        # Remover a turma ID 1
+        cursor.execute("DELETE FROM turmas WHERE id = 1")
+        conn.commit()
+        
+        removidas = cursor.rowcount
+        conn.close()
+        
+        return f"✅ {removidas} turma(s) removida(s)!<br>{info}"
+        
+    except Exception as e:
+        return f"❌ Erro: {str(e)}"
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
