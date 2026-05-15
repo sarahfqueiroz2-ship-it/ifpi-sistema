@@ -2099,5 +2099,6 @@ if __name__ == '__main__':
     print("SERVIDOR INICIADO")
     print("="*60)
     print(f"Acesse: http://localhost:{port}")
-    
+
+    # FORÇAR DEPLOY - 15/05/2026 - Adicionar módulo 9
     app.run(host='0.0.0.0', port=port, debug=False)
