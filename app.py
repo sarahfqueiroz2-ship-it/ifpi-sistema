@@ -2086,6 +2086,81 @@ def criar_modulo_9():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@app.route('/emergencia/criar_modulo_9', methods=['GET'])
+def emergencia_criar_modulo_9():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Primeiro, ver a estrutura da tabela turmas
+        cursor.execute("""
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'turmas'
+        """)
+        colunas = cursor.fetchall()
+        
+        resultado = "<h2>Diagnóstico:</h2>"
+        resultado += "<p>Colunas da tabela turmas:</p><ul>"
+        for col in colunas:
+            resultado += f"<li>{col['column_name']} : {col['data_type']}</li>"
+        resultado += "</ul>"
+        
+        # Buscar curso de Administração
+        cursor.execute("SELECT id, nome FROM cursos WHERE nome ILIKE '%Administração%'")
+        curso = cursor.fetchone()
+        
+        if not curso:
+            return resultado + "<p>❌ Curso de Administração não encontrado!</p>"
+        
+        curso_id = curso['id']
+        resultado += f"<p>✅ Curso encontrado: {curso['nome']} (ID: {curso_id})</p>"
+        
+        # Verificar se módulo 9 já existe (com adaptação para texto ou inteiro)
+        try:
+            cursor.execute("SELECT id, modulo FROM turmas WHERE curso_id = %s AND CAST(modulo AS TEXT) = '9'", (curso_id,))
+            existe = cursor.fetchone()
+        except:
+            cursor.execute("SELECT id, modulo FROM turmas WHERE curso_id = %s AND modulo = '9'", (curso_id,))
+            existe = cursor.fetchone()
+        
+        if existe:
+            resultado += f"<p>ℹ️ Módulo 9 já existe! (ID: {existe['id']})</p>"
+        else:
+            # Tentar inserir com diferentes formatos
+            try:
+                cursor.execute("""
+                    INSERT INTO turmas (curso_id, modulo, turma, ativo)
+                    VALUES (%s, '9', 'A', 1)
+                """, (curso_id,))
+                conn.commit()
+                resultado += "<p style='color:green'>✅ Módulo 9 criado com sucesso! (formato texto)</p>"
+            except Exception as e1:
+                try:
+                    cursor.execute("""
+                        INSERT INTO turmas (curso_id, modulo, turma, ativo)
+                        VALUES (%s, 9, 'A', 1)
+                    """, (curso_id,))
+                    conn.commit()
+                    resultado += "<p style='color:green'>✅ Módulo 9 criado com sucesso! (formato número)</p>"
+                except Exception as e2:
+                    resultado += f"<p style='color:red'>❌ Erro ao criar: {e2}</p>"
+        
+        # Listar todas as turmas do curso
+        cursor.execute("SELECT id, modulo FROM turmas WHERE curso_id = %s ORDER BY modulo", (curso_id,))
+        turmas = cursor.fetchall()
+        resultado += "<h3>Turmas atuais:</h3><ul>"
+        for t in turmas:
+            resultado += f"<li>ID: {t['id']} - Módulo: {t['modulo']}</li>"
+        resultado += "</ul>"
+        
+        conn.close()
+        return resultado
+        
+    except Exception as e:
+        return f"❌ Erro geral: {str(e)}"
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
