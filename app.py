@@ -1028,31 +1028,51 @@ def get_calendario_turma_marcacoes(turma_id):
             return jsonify({'success': False, 'message': 'Turma não encontrada'}), 404
         
         turno = turma['turno']
+        curso_nome = turma['curso_nome']
         
-        horarios_config = {
-            'manha': [
+        # Cursos técnicos integrados (ensino médio) - têm manhã E tarde
+        cursos_integral = [
+            'Técnico em Administração integrado ao médio',
+            'Técnico em Informática integrado ao médio', 
+            'Técnico em Meio Ambiente integrado ao médio'
+        ]
+        
+        # Verificar se é curso técnico integrado
+        if curso_nome in cursos_integral:
+            # Mostrar horários da manhã + tarde
+            horarios_lista = [
                 {'id': 1, 'nome': '1ª Aula', 'inicio': '07:00', 'fim': '08:00'},
                 {'id': 2, 'nome': '2ª Aula', 'inicio': '08:00', 'fim': '09:00'},
                 {'id': 3, 'nome': '3ª Aula', 'inicio': '09:00', 'fim': '10:00'},
                 {'id': 4, 'nome': '4ª Aula', 'inicio': '10:20', 'fim': '11:20'},
                 {'id': 5, 'nome': '5ª Aula', 'inicio': '11:20', 'fim': '12:20'},
-            ],
-            'tarde': [
+                {'id': 6, 'nome': '6ª Aula (Tarde)', 'inicio': '14:00', 'fim': '15:00'},
+                {'id': 7, 'nome': '7ª Aula (Tarde)', 'inicio': '15:00', 'fim': '16:00'},
+                {'id': 8, 'nome': '8ª Aula (Tarde)', 'inicio': '16:00', 'fim': '17:00'},
+            ]
+        elif turno == 'manha':
+            horarios_lista = [
+                {'id': 1, 'nome': '1ª Aula', 'inicio': '07:00', 'fim': '08:00'},
+                {'id': 2, 'nome': '2ª Aula', 'inicio': '08:00', 'fim': '09:00'},
+                {'id': 3, 'nome': '3ª Aula', 'inicio': '09:00', 'fim': '10:00'},
+                {'id': 4, 'nome': '4ª Aula', 'inicio': '10:20', 'fim': '11:20'},
+                {'id': 5, 'nome': '5ª Aula', 'inicio': '11:20', 'fim': '12:20'},
+            ]
+        elif turno == 'tarde':
+            horarios_lista = [
                 {'id': 10, 'nome': '1ª Aula', 'inicio': '13:00', 'fim': '14:00'},
                 {'id': 11, 'nome': '2ª Aula', 'inicio': '14:00', 'fim': '15:00'},
                 {'id': 12, 'nome': '3ª Aula', 'inicio': '15:00', 'fim': '16:00'},
                 {'id': 13, 'nome': '4ª Aula', 'inicio': '16:00', 'fim': '17:00'},
                 {'id': 14, 'nome': '5ª Aula', 'inicio': '17:00', 'fim': '18:00'},
-            ],
-            'noite': [
+            ]
+        else:  # noite
+            horarios_lista = [
                 {'id': 15, 'nome': '1ª Aula', 'inicio': '18:00', 'fim': '19:00'},
                 {'id': 16, 'nome': '2ª Aula', 'inicio': '19:00', 'fim': '20:00'},
                 {'id': 17, 'nome': '3ª Aula', 'inicio': '20:00', 'fim': '21:00'},
                 {'id': 18, 'nome': '4ª Aula', 'inicio': '21:00', 'fim': '22:00'},
             ]
-        }
-        
-        horarios_lista = horarios_config.get(turno, horarios_config['manha'])
         
         cursor.execute("""
             SELECT cm.*, 
