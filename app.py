@@ -2128,6 +2128,32 @@ def criar_modulo_9_bacharelado():
     except Exception as e:
         return f"❌ Erro: {str(e)}"
 
+@app.route('/admin/limpar_turma_extra', methods=['GET'])
+def limpar_turma_extra():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Remover a turma com módulo 9 que não pertence ao Técnico
+        # (curso_id 5 é o Técnico em Administração)
+        cursor.execute("""
+            DELETE FROM turmas 
+            WHERE curso_id = 5 AND modulo = '9'
+        """)
+        
+        conn.commit()
+        removidas = cursor.rowcount
+        
+        conn.close()
+        
+        if removidas > 0:
+            return f"✅ {removidas} turma(s) extra(s) removida(s) do Técnico em Administração!"
+        else:
+            return "ℹ️ Nenhuma turma extra encontrada para remover."
+        
+    except Exception as e:
+        return f"❌ Erro: {str(e)}"
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
