@@ -956,19 +956,17 @@ def get_turmas_calendario():
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Versão PostgreSQL (com %s)
         cursor.execute("""
             SELECT 
                 t.id as turma_id,
-                t.serie,
                 t.modulo,
-                t.turma,
                 c.id as curso_id,
-                c.nome as curso_nome,
-                c.turno
+                c.nome as curso_nome
             FROM turmas t
             JOIN cursos c ON t.curso_id = c.id
             WHERE t.ativo = 1
-            ORDER BY c.nome, t.serie, t.modulo
+            ORDER BY c.nome, t.modulo
         """)
         
         turmas = cursor.fetchall()
@@ -981,30 +979,27 @@ def get_turmas_calendario():
                 cursos_dict[curso_id] = {
                     'id': curso_id,
                     'nome': turma['curso_nome'],
-                    'turno': turma['turno'],
                     'turmas': []
                 }
             
-            if turma['serie']:
-                nome_turma = f"{turma['serie']}º Ano"
-            elif turma['modulo']:
-                nome_turma = f"{turma['modulo']}º Módulo"
-            else:
-                nome_turma = "Turma"
-            
-            if turma['turma']:
-                nome_turma += f" - Turma {turma['turma']}"
+            # Permite módulo 9
+            nome_turma = f"{turma['modulo']}º Módulo"
             
             cursos_dict[curso_id]['turmas'].append({
                 'id': turma['turma_id'],
-                'nome': nome_turma
+                'nome': nome_turma,
+                'modulo': turma['modulo']
             })
+        
+        # Ordenar por módulo
+        for curso_id in cursos_dict:
+            cursos_dict[curso_id]['turmas'].sort(key=lambda x: x['modulo'])
         
         cursos = list(cursos_dict.values())
         return jsonify({'cursos': cursos, 'success': True})
         
     except Exception as e:
-        print("Erro ao listar turmas:", str(e))
+        print(f"Erro ao listar turmas: {e}")
         traceback.print_exc()
         return jsonify({'cursos': [], 'success': False, 'message': str(e)}), 500
 
