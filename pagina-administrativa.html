@@ -1027,8 +1027,7 @@ function gerarRelatorio() {
             grupo.ausencias += qtd;
         }
         
-        // CORRIGIDO: Garantir que observações seja uma string
-        let observacaoTexto = '-';
+        let observacaoTexto = '';
         if (r.observacoes && r.observacoes !== '' && r.observacoes !== 'null' && r.observacoes !== 'undefined') {
             observacaoTexto = r.observacoes;
         }
@@ -1084,17 +1083,21 @@ function gerarRelatorio() {
         const grupo = grupos[idx];
         const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
         
-        if (startY > 190) {
+        if (startY > 180) {
             doc.addPage();
             startY = 20;
         }
         
-        doc.setFontSize(12);
-        doc.setTextColor(45, 134, 89);
+        // Título do grupo com fundo cinza claro
+        doc.setFillColor(240, 240, 240);
+        doc.rect(14, startY - 4, doc.internal.pageSize.getWidth() - 28, 8, 'F');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'bold');
         doc.text(`${grupo.professor} - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}`, 14, startY);
-        startY += 6;
+        startY += 8;
         
+        // Tabela de resumo
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
@@ -1108,12 +1111,12 @@ function gerarRelatorio() {
             body: summaryData,
             startY: startY,
             theme: 'grid',
-            styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+            styles: { fontSize: 9, cellPadding: 4, halign: 'center' },
             headStyles: { fillColor: [45, 134, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
             margin: { left: 14, right: 14 }
         });
         
-        startY = doc.lastAutoTable.finalY + 5;
+        startY = doc.lastAutoTable.finalY + 6;
         
         if (grupo.registros.length > 0) {
             doc.setFontSize(10);
@@ -1122,40 +1125,39 @@ function gerarRelatorio() {
             doc.text('Registros Detalhados:', 14, startY);
             startY += 5;
             
-            const registrosData = grupo.registros.map(reg => {
-                // Tratar observações para exibição no PDF
+            // Preparar dados para a tabela
+            const registrosData = [];
+            for (const reg of grupo.registros) {
                 let obs = reg.observacoes;
                 if (!obs || obs === '' || obs === 'null' || obs === 'undefined') {
                     obs = '—';
                 }
-                if (obs.length > 50) {
-                    obs = obs.substring(0, 50) + '...';
-                }
-                return [
+                // Não cortar as observações, deixar fluir
+                registrosData.push([
                     formatarDataPDF(reg.data),
                     formatarTipo(reg.tipo),
                     reg.quantidade.toString(),
                     obs
-                ];
-            });
+                ]);
+            }
             
             doc.autoTable({
-                head: [['Data', 'Tipo', 'Quantidade', 'Observações']],
+                head: [['Data', 'Tipo', 'Qtd', 'Observações']],
                 body: registrosData,
                 startY: startY,
                 theme: 'striped',
-                styles: { fontSize: 8, cellPadding: 3 },
+                styles: { fontSize: 8, cellPadding: 4, valign: 'top' },
                 headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255], fontStyle: 'bold' },
                 columnStyles: {
-                    0: { cellWidth: 22 },
-                    1: { cellWidth: 25 },
-                    2: { cellWidth: 18 },
-                    3: { cellWidth: 90 }
+                    0: { cellWidth: 22, halign: 'center' },
+                    1: { cellWidth: 25, halign: 'center' },
+                    2: { cellWidth: 15, halign: 'center' },
+                    3: { cellWidth: 'auto' }
                 },
                 margin: { left: 14, right: 14 }
             });
             
-            startY = doc.lastAutoTable.finalY + 8;
+            startY = doc.lastAutoTable.finalY + 6;
         } else {
             doc.setFontSize(9);
             doc.setTextColor(150, 150, 150);
@@ -1163,6 +1165,7 @@ function gerarRelatorio() {
             startY += 8;
         }
         
+        // Linha separadora
         doc.setDrawColor(200, 200, 200);
         doc.line(14, startY - 3, doc.internal.pageSize.getWidth() - 14, startY - 3);
     }
