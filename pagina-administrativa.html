@@ -957,6 +957,7 @@ function logout() {
         aplicarFiltros();
     }
 
+
 function gerarRelatorio() {
     const profSelecionado = document.getElementById('filtroProfessor').value;
     const dataInicial = document.getElementById('filtroDataInicial').value;
@@ -1026,11 +1027,17 @@ function gerarRelatorio() {
             grupo.ausencias += qtd;
         }
         
+        // CORRIGIDO: Garantir que observações seja uma string
+        let observacaoTexto = '-';
+        if (r.observacoes && r.observacoes !== '' && r.observacoes !== 'null' && r.observacoes !== 'undefined') {
+            observacaoTexto = r.observacoes;
+        }
+        
         grupo.registros.push({
             data: r.data,
             tipo: r.tipo,
             quantidade: qtd,
-            observacoes: r.observacoes || '-'
+            observacoes: observacaoTexto
         });
     });
 
@@ -1115,25 +1122,35 @@ function gerarRelatorio() {
             doc.text('Registros Detalhados:', 14, startY);
             startY += 5;
             
-            const registrosData = grupo.registros.map(reg => [
-                formatarDataPDF(reg.data),
-                formatarTipo(reg.tipo),
-                reg.quantidade.toString(),
-                reg.observacoes.length > 40 ? reg.observacoes.substring(0, 40) + '...' : reg.observacoes
-            ]);
+            const registrosData = grupo.registros.map(reg => {
+                // Tratar observações para exibição no PDF
+                let obs = reg.observacoes;
+                if (!obs || obs === '' || obs === 'null' || obs === 'undefined') {
+                    obs = '—';
+                }
+                if (obs.length > 50) {
+                    obs = obs.substring(0, 50) + '...';
+                }
+                return [
+                    formatarDataPDF(reg.data),
+                    formatarTipo(reg.tipo),
+                    reg.quantidade.toString(),
+                    obs
+                ];
+            });
             
             doc.autoTable({
                 head: [['Data', 'Tipo', 'Quantidade', 'Observações']],
                 body: registrosData,
                 startY: startY,
                 theme: 'striped',
-                styles: { fontSize: 8, cellPadding: 2 },
+                styles: { fontSize: 8, cellPadding: 3 },
                 headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255], fontStyle: 'bold' },
                 columnStyles: {
-                    0: { cellWidth: 25 },
-                    1: { cellWidth: 30 },
-                    2: { cellWidth: 20 },
-                    3: { cellWidth: 80 }
+                    0: { cellWidth: 22 },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 18 },
+                    3: { cellWidth: 90 }
                 },
                 margin: { left: 14, right: 14 }
             });
@@ -1161,7 +1178,6 @@ function gerarRelatorio() {
     const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
     doc.save(nomeArquivo);
 }
-
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
         // Gerar o menu
