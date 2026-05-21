@@ -957,8 +957,7 @@ function logout() {
         aplicarFiltros();
     }
 
-   
-function gerarRelatorio() {
+   function gerarRelatorio() {
     const profSelecionado = document.getElementById('filtroProfessor').value;
     const dataInicial = document.getElementById('filtroDataInicial').value;
     const dataFinal = document.getElementById('filtroDataFinal').value;
@@ -985,7 +984,7 @@ function gerarRelatorio() {
         });
     }
 
-    // Agrupar com normalização
+    // Agrupar para resumo
     const gruposMap = new Map();
     
     registrosFiltrados.forEach(r => {
@@ -1007,7 +1006,8 @@ function gerarRelatorio() {
                 totalAulas: 0, 
                 antecipadas: 0, 
                 reposicoes: 0, 
-                ausencias: 0 
+                ausencias: 0,
+                registros: [] // Array para guardar os registros detalhados
             });
         }
         
@@ -1025,6 +1025,15 @@ function gerarRelatorio() {
         } else if (tipo === 'ausencia' || tipo === 'ausência') {
             grupo.ausencias += qtd;
         }
+        
+        // Adicionar registro detalhado
+        grupo.registros.push({
+            data: r.data,
+            tipo: r.tipo,
+            quantidade: qtd,
+            horarios: r.horarios || '-',
+            observacoes: r.observacoes || '-'
+        });
     });
 
     const grupos = Array.from(gruposMap.values());
@@ -1032,6 +1041,24 @@ function gerarRelatorio() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
+    // Função para formatar data
+    function formatarDataPDF(data) {
+        if (!data) return '-';
+        const d = new Date(data);
+        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+    }
+
+    // Função para obter tipo formatado
+    function formatarTipo(tipo) {
+        if (!tipo) return '-';
+        const t = tipo.toLowerCase();
+        if (t === 'antecipacao' || t === 'antecipação') return 'Antecipação';
+        if (t === 'reposicao' || t === 'reposição') return 'Reposição';
+        if (t === 'ausencia' || t === 'ausência') return 'Ausência';
+        return tipo;
+    }
+
+    // Cabeçalho do relatório
     doc.setFontSize(18);
     doc.setTextColor(45, 134, 89);
     doc.text('IFPI Campus Pedro II', 14, 15);
@@ -1041,28 +1068,101 @@ function gerarRelatorio() {
 
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    const periodoTexto = dataInicial && dataFinal ? `Período: ${dataInicial.split('-').reverse().join('/')} a ${dataFinal.split('-').reverse().join('/')}` : 'Período: Todo o histórico';
+    const periodoTexto = dataInicial && dataFinal ? `Período: ${formatarDataPDF(dataInicial)} a ${formatarDataPDF(dataFinal)}` : 'Período: Todo o histórico';
     doc.text(periodoTexto, 14, 33);
     if (profSelecionado) doc.text(`Professor: ${profSelecionado}`, 14, 39);
     const dataGeracao = new Date().toLocaleDateString('pt-BR');
     doc.text(`Gerado em: ${dataGeracao}`, 14, 45);
+    doc.text(`Total de registros: ${registrosFiltrados.length}`, 14, 51);
 
-    const tableColumn = ['Professor', 'Curso', 'Série', 'Disciplina', 'Total', 'Antec', 'Repos', 'Ausen', 'Saldo'];
-    const tableRows = grupos.map(grupo => {
+    let startY = 58;
+
+    // Para cada grupo, criar uma seção
+    for (let idx = 0; idx < grupos.length; idx++) {
+        const grupo = grupos[idx];
         const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
-        return [grupo.professor, grupo.curso, grupo.serie, grupo.disciplina, grupo.totalAulas, grupo.antecipadas, grupo.reposicoes, grupo.ausencias, saldo];
-    });
+        
+        // Verificar se precisa de nova página
+        if (startY > 190) {
+            doc.addPage();
+            startY = 20;
+        }
+        
+        // Título do grupo
+        doc.setFontSize(12);
+        doc.setTextColor(45, 134, 89);
+        doc.setFont(undefined, 'bold');
+        doc.text(`${grupo.professor} - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}`, 14, startY);
+        startY += 6;
+        
+        // Tabela de resumo
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'normal');
+        
+        const summaryData = [
+            ['Total Aulas', 'Antecipações', 'Reposições', 'Ausências', 'Saldo'],
+            [grupo.totalAulas.toString(), grupo.antecipadas.toString(), grupo.reposicoes.toString(), grupo.ausencias.toString(), saldo.toString()]
+        ];
+        
+        doc.autoTable({
+            body: summaryData,
+            startY: startY,
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+            headStyles: { fillColor: [45, 134, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
+            margin: { left: 14, right: 14 }
+        });
+        
+        startY = doc.lastAutoTable.finalY + 5;
+        
+        // Tabela de registros detalhados (se houver)
+        if (grupo.registros.length > 0) {
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'bold');
+            doc.text('Registros Detalhados:', 14, startY);
+            startY += 5;
+            
+            const registrosData = grupo.registros.map(reg => [
+                formatarDataPDF(reg.data),
+                formatarTipo(reg.tipo),
+                reg.quantidade.toString(),
+                reg.horarios,
+                reg.observacoes
+            ]);
+            
+            doc.autoTable({
+                head: [['Data', 'Tipo', 'Quantidade', 'Horários', 'Observações']],
+                body: registrosData,
+                startY: startY,
+                theme: 'striped',
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255], fontStyle: 'bold' },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 20 },
+                    3: { cellWidth: 40 },
+                    4: { cellWidth: 50 }
+                },
+                margin: { left: 14, right: 14 }
+            });
+            
+            startY = doc.lastAutoTable.finalY + 8;
+        } else {
+            doc.setFontSize(9);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Nenhum registro detalhado disponível.', 14, startY);
+            startY += 8;
+        }
+        
+        // Linha separadora
+        doc.setDrawColor(200, 200, 200);
+        doc.line(14, startY - 3, doc.internal.pageSize.getWidth() - 14, startY - 3);
+    }
 
-    doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 50,
-        theme: 'grid',
-        headStyles: { fillColor: [45, 134, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 35 }, 2: { cellWidth: 25 }, 3: { cellWidth: 35 }, 4: { cellWidth: 15 }, 5: { cellWidth: 15 }, 6: { cellWidth: 15 }, 7: { cellWidth: 15 }, 8: { cellWidth: 15 } },
-        margin: { left: 10, right: 10 }
-    });
-
+    // Rodapé em todas as páginas
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -1071,9 +1171,11 @@ function gerarRelatorio() {
         doc.text(`Sistema de Controle de Aulas - IFPI Campus Pedro II - Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
     }
 
+    // Salvar PDF
     const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
     doc.save(nomeArquivo);
 }
+
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
         // Gerar o menu
