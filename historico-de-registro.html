@@ -1284,54 +1284,72 @@ function formatarDataParaInput(data) {
     }
 
     function filtrar() {
-        const dataInicio = document.getElementById('dataInicio').value;
-        const dataFim = document.getElementById('dataFim').value;
-        const tipo = document.getElementById('tipoFiltro').value;
-        const curso = document.getElementById('cursoFiltro').value;
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    const tipo = document.getElementById('tipoFiltro').value;
+    const cursoSelecionado = document.getElementById('cursoFiltro').value;
 
-        if (!todosRegistros || todosRegistros.length === 0) { 
-            renderizarTabela([]); 
-            atualizarContadores([]); 
-            return; 
-        }
-
-        const filtrados = todosRegistros.filter(r => {
-            if (dataInicio && r.data) {
-                const dataReg = new Date(r.data);
-                const dataInicioObj = new Date(dataInicio + 'T00:00:00');
-                if (dataReg < dataInicioObj) return false;
-            }
-            if (dataFim && r.data) {
-                const dataReg = new Date(r.data);
-                const dataFimObj = new Date(dataFim + 'T23:59:59');
-                if (dataReg > dataFimObj) return false;
-            }
-            if (tipo) {
-                const tipoReg = r.tipo ? r.tipo.toLowerCase() : '';
-                const tipoFiltro = tipo.toLowerCase();
-                if (tipoFiltro === 'antecipacao' && !(tipoReg === 'antecipacao' || tipoReg === 'antecipação')) return false;
-                if (tipoFiltro === 'reposicao' && !(tipoReg === 'reposicao' || tipoReg === 'reposição')) return false;
-                if (tipoFiltro === 'ausencia' && !(tipoReg === 'ausencia' || tipoReg === 'ausência')) return false;
-            }
-            if (curso) {
-                const cursoNome = r.curso_nome ? r.curso_nome.toLowerCase() : '';
-                const cursoFiltro = curso.toLowerCase();
-                // Filtro simplificado
-                if (cursoFiltro === 'tecnico-informatica' && !cursoNome.includes('informática')) return false;
-                if (cursoFiltro === 'tecnico-administracao' && !cursoNome.includes('administração')) return false;
-                if (cursoFiltro === 'tecnico-meio-ambiente' && !cursoNome.includes('meio ambiente')) return false;
-                if (cursoFiltro === 'gastronomia' && !cursoNome.includes('gastronomia')) return false;
-                if (cursoFiltro === 'licenciatura-biologia' && !cursoNome.includes('biológica')) return false;
-                if (cursoFiltro === 'bacharelado-administracao' && !cursoNome.includes('administração')) return false;
-                if (cursoFiltro === 'tecnologo-marketing' && !cursoNome.includes('marketing')) return false;
-                if (cursoFiltro === 'tecnologo-ads' && !cursoNome.includes('análise')) return false;
-            }
-            return true;
-        });
-
-        renderizarTabela(filtrados);
-        atualizarContadores(filtrados);
+    if (!todosRegistros || todosRegistros.length === 0) { 
+        renderizarTabela([]); 
+        atualizarContadores([]); 
+        return; 
     }
+
+    // Mapeamento dos valores do select para os nomes EXATOS dos cursos
+    const cursoMapping = {
+        'tecnico-informatica': 'Técnico em Informática integrado ao médio',
+        'tecnico-administracao': 'Técnico em Administração integrado ao médio',
+        'tecnico-meio-ambiente': 'Técnico em Meio Ambiente integrado ao médio',
+        'gastronomia': 'Gastronomia',
+        'gastronomia-proeja': 'Gastronomia PROEJA',
+        'restaurante-bar': 'Restaurante e Bar',
+        'licenciatura-biologia': 'Licenciatura em Ciências Biológicas',
+        'bacharelado-administracao': 'Bacharelado em Administração',
+        'tecnologo-marketing': 'Tecnólogo em Marketing',
+        'tecnologo-ads': 'Tecnólogo em Análise e Desenvolvimento de Sistemas'
+    };
+
+    const filtrados = todosRegistros.filter(r => {
+        // Filtro por data início
+        if (dataInicio && r.data) {
+            const dataReg = new Date(r.data);
+            const dataInicioObj = new Date(dataInicio + 'T00:00:00');
+            if (dataReg < dataInicioObj) return false;
+        }
+        
+        // Filtro por data fim
+        if (dataFim && r.data) {
+            const dataReg = new Date(r.data);
+            const dataFimObj = new Date(dataFim + 'T23:59:59');
+            if (dataReg > dataFimObj) return false;
+        }
+        
+        // Filtro por tipo (antecipacao, reposicao, ausencia)
+        if (tipo) {
+            const tipoReg = r.tipo ? r.tipo.toLowerCase() : '';
+            const tipoFiltro = tipo.toLowerCase();
+            if (tipoFiltro === 'antecipacao' && !(tipoReg === 'antecipacao' || tipoReg === 'antecipação')) return false;
+            if (tipoFiltro === 'reposicao' && !(tipoReg === 'reposicao' || tipoReg === 'reposição')) return false;
+            if (tipoFiltro === 'ausencia' && !(tipoReg === 'ausencia' || tipoReg === 'ausência')) return false;
+        }
+        
+        // Filtro por curso - AGORA COM CORRESPONDÊNCIA EXATA
+        if (cursoSelecionado) {
+            const cursoNomeRegistro = r.curso_nome || '';
+            const cursoNomeEsperado = cursoMapping[cursoSelecionado];
+            
+            // Comparação EXATA (não usa includes)
+            if (cursoNomeRegistro !== cursoNomeEsperado) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+
+    renderizarTabela(filtrados);
+    atualizarContadores(filtrados);
+}
 
 
     
