@@ -1026,14 +1026,21 @@ function logout() {
             grupo.ausencias += qtd;
         }
         
-        // Adicionar registro detalhado
-        grupo.registros.push({
-            data: r.data,
-            tipo: r.tipo,
-            quantidade: qtd,
-            horarios: r.horarios || '-',
-            observacoes: r.observacoes || '-'
-        });
+        // Adicionar registro detalhado - VERSÃO MELHORADA COM HORÁRIOS
+let horariosFormatados = '-';
+if (r.horarios) {
+    horariosFormatados = r.horarios;
+} else if (r.horario_inicio && r.horario_fim) {
+    horariosFormatados = `${r.horario_inicio} - ${r.horario_fim}`;
+}
+
+grupo.registros.push({
+    data: r.data,
+    tipo: r.tipo,
+    quantidade: qtd,
+    horarios: horariosFormatados,
+    observacoes: r.observacoes || '-'
+});
     });
 
     const grupos = Array.from(gruposMap.values());
