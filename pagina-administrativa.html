@@ -957,7 +957,7 @@ function logout() {
         aplicarFiltros();
     }
 
-   function gerarRelatorio() {
+function gerarRelatorio() {
     const profSelecionado = document.getElementById('filtroProfessor').value;
     const dataInicial = document.getElementById('filtroDataInicial').value;
     const dataFinal = document.getElementById('filtroDataFinal').value;
@@ -1007,7 +1007,7 @@ function logout() {
                 antecipadas: 0, 
                 reposicoes: 0, 
                 ausencias: 0,
-                registros: [] // Array para guardar os registros detalhados
+                registros: []
             });
         }
         
@@ -1026,21 +1026,12 @@ function logout() {
             grupo.ausencias += qtd;
         }
         
-        // Adicionar registro detalhado - VERSÃO MELHORADA COM HORÁRIOS
-let horariosFormatados = '-';
-if (r.horarios) {
-    horariosFormatados = r.horarios;
-} else if (r.horario_inicio && r.horario_fim) {
-    horariosFormatados = `${r.horario_inicio} - ${r.horario_fim}`;
-}
-
-grupo.registros.push({
-    data: r.data,
-    tipo: r.tipo,
-    quantidade: qtd,
-    horarios: horariosFormatados,
-    observacoes: r.observacoes || '-'
-});
+        grupo.registros.push({
+            data: r.data,
+            tipo: r.tipo,
+            quantidade: qtd,
+            observacoes: r.observacoes || '-'
+        });
     });
 
     const grupos = Array.from(gruposMap.values());
@@ -1048,14 +1039,12 @@ grupo.registros.push({
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    // Função para formatar data
     function formatarDataPDF(data) {
         if (!data) return '-';
         const d = new Date(data);
         return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
     }
 
-    // Função para obter tipo formatado
     function formatarTipo(tipo) {
         if (!tipo) return '-';
         const t = tipo.toLowerCase();
@@ -1065,7 +1054,7 @@ grupo.registros.push({
         return tipo;
     }
 
-    // Cabeçalho do relatório
+    // Cabeçalho
     doc.setFontSize(18);
     doc.setTextColor(45, 134, 89);
     doc.text('IFPI Campus Pedro II', 14, 15);
@@ -1084,25 +1073,21 @@ grupo.registros.push({
 
     let startY = 58;
 
-    // Para cada grupo, criar uma seção
     for (let idx = 0; idx < grupos.length; idx++) {
         const grupo = grupos[idx];
         const saldo = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
         
-        // Verificar se precisa de nova página
         if (startY > 190) {
             doc.addPage();
             startY = 20;
         }
         
-        // Título do grupo
         doc.setFontSize(12);
         doc.setTextColor(45, 134, 89);
         doc.setFont(undefined, 'bold');
         doc.text(`${grupo.professor} - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}`, 14, startY);
         startY += 6;
         
-        // Tabela de resumo
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
@@ -1123,7 +1108,6 @@ grupo.registros.push({
         
         startY = doc.lastAutoTable.finalY + 5;
         
-        // Tabela de registros detalhados (se houver)
         if (grupo.registros.length > 0) {
             doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
@@ -1135,12 +1119,11 @@ grupo.registros.push({
                 formatarDataPDF(reg.data),
                 formatarTipo(reg.tipo),
                 reg.quantidade.toString(),
-                reg.horarios,
-                reg.observacoes
+                reg.observacoes.length > 40 ? reg.observacoes.substring(0, 40) + '...' : reg.observacoes
             ]);
             
             doc.autoTable({
-                head: [['Data', 'Tipo', 'Quantidade', 'Horários', 'Observações']],
+                head: [['Data', 'Tipo', 'Quantidade', 'Observações']],
                 body: registrosData,
                 startY: startY,
                 theme: 'striped',
@@ -1148,10 +1131,9 @@ grupo.registros.push({
                 headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255], fontStyle: 'bold' },
                 columnStyles: {
                     0: { cellWidth: 25 },
-                    1: { cellWidth: 25 },
+                    1: { cellWidth: 30 },
                     2: { cellWidth: 20 },
-                    3: { cellWidth: 40 },
-                    4: { cellWidth: 50 }
+                    3: { cellWidth: 80 }
                 },
                 margin: { left: 14, right: 14 }
             });
@@ -1164,12 +1146,10 @@ grupo.registros.push({
             startY += 8;
         }
         
-        // Linha separadora
         doc.setDrawColor(200, 200, 200);
         doc.line(14, startY - 3, doc.internal.pageSize.getWidth() - 14, startY - 3);
     }
 
-    // Rodapé em todas as páginas
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -1178,7 +1158,6 @@ grupo.registros.push({
         doc.text(`Sistema de Controle de Aulas - IFPI Campus Pedro II - Página ${i} de ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
     }
 
-    // Salvar PDF
     const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
     doc.save(nomeArquivo);
 }
