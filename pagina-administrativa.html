@@ -1032,45 +1032,6 @@ function aplicarFiltros() {
     });
 }
 
-        const trDetalhes = document.createElement('tr');
-        trDetalhes.className = 'detalhes-row';
-        trDetalhes.id = `detalhes-${index}`;
-        trDetalhes.innerHTML = `
-            <td colspan="7">
-                <div style="padding: 20px;">
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
-                        <div style="text-align: center; padding: 16px; background: #f5f6f7; border-radius: 8px;">
-                            <div style="font-size: 28px; font-weight: 700;">${grupo.totalAulas}</div>
-                            <div style="font-size: 12px; color: #586069;">Total</div>
-                        </div>
-                        <div style="text-align: center; padding: 16px; background: #fef3c7; border-radius: 8px;">
-                            <div style="font-size: 28px; font-weight: 700; color: #d97706;">${grupo.antecipadas}</div>
-                            <div style="font-size: 12px; color: #586069;">Antecipadas</div>
-                        </div>
-                        <div style="text-align: center; padding: 16px; background: #dbeafe; border-radius: 8px;">
-                            <div style="font-size: 28px; font-weight: 700; color: #2563eb;">${grupo.reposicoes}</div>
-                            <div style="font-size: 12px; color: #586069;">Reposições</div>
-                        </div>
-                        <div style="text-align: center; padding: 16px; background: #fee2e2; border-radius: 8px;">
-                            <div style="font-size: 28px; font-weight: 700; color: #dc2626;">${grupo.ausencias}</div>
-                            <div style="font-size: 12px; color: #586069;">Ausências</div>
-                        </div>
-                        <div style="text-align: center; padding: 16px; background: ${saldo >= 0 ? '#d1fae5' : '#fee2e2'}; border-radius: 8px;">
-                            <div style="font-size: 28px; font-weight: 700; color: ${saldo >= 0 ? '#059669' : '#dc2626'};">${saldoFormatado}</div>
-                            <div style="font-size: 12px; color: #586069;">Saldo</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 16px;">
-                        <h4 style="margin-bottom: 12px;">Registros Individuais:</h4>
-                        ${registrosHtml}
-                    </div>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(trDetalhes);
-    });
-}
-
     function toggleDetalhes(id) {
         const row = document.getElementById(`detalhes-${id}`);
         const isVisible = row.classList.contains('show');
