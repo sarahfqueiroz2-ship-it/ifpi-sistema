@@ -957,7 +957,6 @@ function logout() {
         aplicarFiltros();
     }
 
-
 function gerarRelatorio() {
     const profSelecionado = document.getElementById('filtroProfessor').value;
     const dataInicial = document.getElementById('filtroDataInicial').value;
@@ -985,14 +984,23 @@ function gerarRelatorio() {
         });
     }
 
-    // Agrupar para resumo
+    // REMOVER DUPLICATAS: agrupar por ID do registro
+    const registrosUnicos = new Map();
+    registrosFiltrados.forEach(r => {
+        if (r.id && !registrosUnicos.has(r.id)) {
+            registrosUnicos.set(r.id, r);
+        }
+    });
+    registrosFiltrados = Array.from(registrosUnicos.values());
+
+    // Agrupar por PROFESSOR + CURSO + SÉRIE + DISCIPLINA
     const gruposMap = new Map();
     
     registrosFiltrados.forEach(r => {
         const nome = r.professor_nome;
-        const curso = (r.curso_nome || 'Curso não informado').trim().toLowerCase();
+        const curso = (r.curso_nome || 'Curso não informado').trim();
         const serie = (r.serie || 'Série não informada').trim();
-        const disciplina = (r.disciplina || 'Disciplina não informada').trim().toLowerCase().replace(/\s+/g, ' ');
+        const disciplina = (r.disciplina || 'Disciplina não informada').trim();
         
         if (!nome) return;
         
@@ -1001,9 +1009,9 @@ function gerarRelatorio() {
         if (!gruposMap.has(chave)) {
             gruposMap.set(chave, { 
                 professor: nome, 
-                curso: r.curso_nome || 'Curso não informado', 
+                curso: curso, 
                 serie: serie, 
-                disciplina: r.disciplina || 'Disciplina não informada', 
+                disciplina: disciplina, 
                 totalAulas: 0, 
                 antecipadas: 0, 
                 reposicoes: 0, 
@@ -1032,13 +1040,27 @@ function gerarRelatorio() {
             observacaoTexto = r.observacoes;
         }
         
-        grupo.registros.push({
-            data: r.data,
-            tipo: r.tipo,
-            quantidade: qtd,
-            observacoes: observacaoTexto
-        });
+        // Verificar se já existe registro com a mesma data para este grupo
+        const dataRegistro = r.data;
+        const jaExiste = grupo.registros.some(reg => reg.data === dataRegistro && reg.tipo === r.tipo);
+        
+        if (!jaExiste) {
+            grupo.registros.push({
+                id: r.id,
+                data: r.data,
+                tipo: r.tipo,
+                quantidade: qtd,
+                observacoes: observacaoTexto
+            });
+        }
     });
+    
+    // Ordenar registros de cada grupo por data (mais recente primeiro)
+    for (const grupo of gruposMap.values()) {
+        grupo.registros.sort((a, b) => {
+            return new Date(b.data) - new Date(a.data);
+        });
+    }
 
     const grupos = Array.from(gruposMap.values());
 
@@ -1047,8 +1069,25 @@ function gerarRelatorio() {
 
     function formatarDataPDF(data) {
         if (!data) return '-';
-        const d = new Date(data);
-        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        
+        if (typeof data === 'string' && data.includes('-')) {
+            const partes = data.split('T')[0].split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+        }
+        
+        try {
+            const d = new Date(data);
+            if (!isNaN(d.getTime())) {
+                const dia = d.getDate().toString().padStart(2, '0');
+                const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+                const ano = d.getFullYear();
+                return `${dia}/${mes}/${ano}`;
+            }
+        } catch(e) {}
+        
+        return '-';
     }
 
     function formatarTipo(tipo) {
@@ -1075,7 +1114,7 @@ function gerarRelatorio() {
     if (profSelecionado) doc.text(`Professor: ${profSelecionado}`, 14, 39);
     const dataGeracao = new Date().toLocaleDateString('pt-BR');
     doc.text(`Gerado em: ${dataGeracao}`, 14, 45);
-    doc.text(`Total de registros: ${registrosFiltrados.length}`, 14, 51);
+    doc.text(`Total de registros únicos: ${registrosFiltrados.length}`, 14, 51);
 
     let startY = 58;
 
@@ -1088,16 +1127,16 @@ function gerarRelatorio() {
             startY = 20;
         }
         
-        // Título do grupo com fundo cinza claro
         doc.setFillColor(240, 240, 240);
         doc.rect(14, startY - 4, doc.internal.pageSize.getWidth() - 28, 8, 'F');
         doc.setFontSize(11);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'bold');
-        doc.text(`${grupo.professor} - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}`, 14, startY);
+        let titulo = `${grupo.professor} - ${grupo.curso} - ${grupo.serie} - ${grupo.disciplina}`;
+        if (titulo.length > 100) titulo = titulo.substring(0, 97) + '...';
+        doc.text(titulo, 14, startY);
         startY += 8;
         
-        // Tabela de resumo
         doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
@@ -1125,33 +1164,33 @@ function gerarRelatorio() {
             doc.text('Registros Detalhados:', 14, startY);
             startY += 5;
             
-            // Preparar dados para a tabela
-            const registrosData = [];
-            for (const reg of grupo.registros) {
+            const registrosData = grupo.registros.map(reg => {
                 let obs = reg.observacoes;
                 if (!obs || obs === '' || obs === 'null' || obs === 'undefined') {
                     obs = '—';
                 }
-                // Não cortar as observações, deixar fluir
-                registrosData.push([
+                if (obs.length > 60) {
+                    obs = obs.substring(0, 57) + '...';
+                }
+                return [
                     formatarDataPDF(reg.data),
                     formatarTipo(reg.tipo),
                     reg.quantidade.toString(),
                     obs
-                ]);
-            }
+                ];
+            });
             
             doc.autoTable({
                 head: [['Data', 'Tipo', 'Qtd', 'Observações']],
                 body: registrosData,
                 startY: startY,
                 theme: 'striped',
-                styles: { fontSize: 8, cellPadding: 4, valign: 'top' },
+                styles: { fontSize: 8, cellPadding: 3, valign: 'top' },
                 headStyles: { fillColor: [100, 100, 100], textColor: [255, 255, 255], fontStyle: 'bold' },
                 columnStyles: {
                     0: { cellWidth: 22, halign: 'center' },
                     1: { cellWidth: 25, halign: 'center' },
-                    2: { cellWidth: 15, halign: 'center' },
+                    2: { cellWidth: 12, halign: 'center' },
                     3: { cellWidth: 'auto' }
                 },
                 margin: { left: 14, right: 14 }
@@ -1165,7 +1204,6 @@ function gerarRelatorio() {
             startY += 8;
         }
         
-        // Linha separadora
         doc.setDrawColor(200, 200, 200);
         doc.line(14, startY - 3, doc.internal.pageSize.getWidth() - 14, startY - 3);
     }
@@ -1181,6 +1219,8 @@ function gerarRelatorio() {
     const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
     doc.save(nomeArquivo);
 }
+
+    
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
         // Gerar o menu
