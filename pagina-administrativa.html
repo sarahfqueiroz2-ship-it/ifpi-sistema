@@ -797,7 +797,7 @@ function logout() {
         }
     }
 
-   function aplicarFiltros() {
+function aplicarFiltros() {
     const profSelecionado = document.getElementById('filtroProfessor').value;
     const dataInicial = document.getElementById('filtroDataInicial').value;
     const dataFinal = document.getElementById('filtroDataFinal').value;
@@ -824,16 +824,7 @@ function logout() {
         });
     }
 
-    // REMOVER DUPLICATAS pelo ID do registro
-    const registrosUnicos = new Map();
-    registrosFiltrados.forEach(r => {
-        if (r.id && !registrosUnicos.has(r.id)) {
-            registrosUnicos.set(r.id, r);
-        }
-    });
-    registrosFiltrados = Array.from(registrosUnicos.values());
-
-    // Agrupar por PROFESSOR + CURSO + SÉRIE + DISCIPLINA
+    // Agrupar por PROFESSOR + CURSO + SÉRIE + DISCIPLINA + DATA + TIPO
     const gruposMap = new Map();
 
     registrosFiltrados.forEach(r => {
@@ -852,29 +843,45 @@ function logout() {
                 curso: curso,
                 serie: serie,
                 disciplina: disciplina,
-                registros: []
+                registrosMap: new Map() // Usar Map para combinar registros da mesma data
             });
         }
 
         const grupo = gruposMap.get(chave);
+        const dataKey = `${r.data}|${r.tipo}`;
         
-        grupo.registros.push({
-            id: r.id,
-            data: r.data,
-            tipo: r.tipo,
-            quantidade: r.quantidade || 0,
-            observacoes: r.observacoes || ''
-        });
+        // Combinar registros da mesma data e tipo
+        if (grupo.registrosMap.has(dataKey)) {
+            const existing = grupo.registrosMap.get(dataKey);
+            existing.quantidade += (r.quantidade || 0);
+            // Concatenar observações se diferentes
+            if (r.observacoes && r.observacoes !== existing.observacoes && existing.observacoes !== '') {
+                existing.observacoes += '; ' + r.observacoes;
+            }
+        } else {
+            grupo.registrosMap.set(dataKey, {
+                id: r.id,
+                data: r.data,
+                tipo: r.tipo,
+                quantidade: r.quantidade || 0,
+                observacoes: r.observacoes || ''
+            });
+        }
     });
 
-    // CALCULAR TOTAIS a partir dos registros ÚNICOS
+    // Converter Maps para arrays e calcular totais
     const grupos = Array.from(gruposMap.values()).map(grupo => {
+        const registros = Array.from(grupo.registrosMap.values());
+        
+        // Ordenar registros por data (mais recente primeiro)
+        registros.sort((a, b) => new Date(b.data) - new Date(a.data));
+        
         let totalAulas = 0;
         let antecipadas = 0;
         let reposicoes = 0;
         let ausencias = 0;
         
-        grupo.registros.forEach(reg => {
+        registros.forEach(reg => {
             const qtd = reg.quantidade;
             totalAulas += qtd;
             
@@ -889,7 +896,11 @@ function logout() {
         });
         
         return {
-            ...grupo,
+            professor: grupo.professor,
+            curso: grupo.curso,
+            serie: grupo.serie,
+            disciplina: grupo.disciplina,
+            registros: registros,
             totalAulas: totalAulas,
             antecipadas: antecipadas,
             reposicoes: reposicoes,
@@ -898,9 +909,20 @@ function logout() {
     });
 
     renderizarTabela(grupos);
+
+    const countSpan = document.getElementById('resultadoCount');
+    if (!countSpan) {
+        const newSpan = document.createElement('span');
+        newSpan.id = 'resultadoCount';
+        newSpan.style.marginLeft = '20px';
+        newSpan.style.fontSize = '14px';
+        newSpan.style.color = 'var(--cinza-secundario)';
+        document.querySelector('.table-header').appendChild(newSpan);
+    }
+    document.getElementById('resultadoCount').textContent = `${grupos.length} grupos encontrados`;
 }
 
-    function renderizarTabela(grupos) {
+  function renderizarTabela(grupos) {
     const tbody = document.querySelector('#professoresTable tbody');
     tbody.innerHTML = '';
 
@@ -927,12 +949,9 @@ function logout() {
         `;
         tbody.appendChild(tr);
 
-        // Criar linha de detalhes com TODOS os registros individuais
+        // Criar linha de detalhes
         let registrosHtml = '';
         if (grupo.registros && grupo.registros.length > 0) {
-            // Ordenar registros por data (mais recente primeiro)
-            const registrosOrdenados = [...grupo.registros].sort((a, b) => new Date(b.data) - new Date(a.data));
-            
             registrosHtml = `
                 <table class="detalhes-table">
                     <thead>
@@ -946,20 +965,21 @@ function logout() {
                     <tbody>
             `;
             
-            registrosOrdenados.forEach(reg => {
+            grupo.registros.forEach(reg => {
                 const dataFormatada = reg.data ? new Date(reg.data).toLocaleDateString('pt-BR') : '-';
                 let tipoDisplay = reg.tipo || '-';
                 if (tipoDisplay.toLowerCase().includes('reposicao') || tipoDisplay.toLowerCase().includes('reposição')) tipoDisplay = 'Reposição';
                 if (tipoDisplay.toLowerCase().includes('antecipacao') || tipoDisplay.toLowerCase().includes('antecipação')) tipoDisplay = 'Antecipação';
                 if (tipoDisplay.toLowerCase().includes('ausencia') || tipoDisplay.toLowerCase().includes('ausência')) tipoDisplay = 'Ausência';
                 
+                const qtdDisplay = reg.quantidade > 0 ? reg.quantidade : '—';
                 const obs = reg.observacoes && reg.observacoes !== '' && reg.observacoes !== 'null' ? reg.observacoes : '—';
                 
                 registrosHtml += `
                     <tr>
                         <td>${dataFormatada}</td>
                         <td>${tipoDisplay}</td>
-                        <td>${reg.quantidade}</td>
+                        <td>${qtdDisplay}</td>
                         <td>${obs}</td>
                     </tr>
                 `;
@@ -972,6 +992,45 @@ function logout() {
         } else {
             registrosHtml = '<div style="padding: 20px; text-align: center; color: #586069;">Nenhum registro detalhado disponível.</div>';
         }
+
+        const trDetalhes = document.createElement('tr');
+        trDetalhes.className = 'detalhes-row';
+        trDetalhes.id = `detalhes-${index}`;
+        trDetalhes.innerHTML = `
+            <td colspan="7">
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
+                        <div style="text-align: center; padding: 16px; background: #f5f6f7; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: 700;">${grupo.totalAulas}</div>
+                            <div style="font-size: 12px; color: #586069;">Total</div>
+                        </div>
+                        <div style="text-align: center; padding: 16px; background: #fef3c7; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: 700; color: #d97706;">${grupo.antecipadas}</div>
+                            <div style="font-size: 12px; color: #586069;">Antecipadas</div>
+                        </div>
+                        <div style="text-align: center; padding: 16px; background: #dbeafe; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: 700; color: #2563eb;">${grupo.reposicoes}</div>
+                            <div style="font-size: 12px; color: #586069;">Reposições</div>
+                        </div>
+                        <div style="text-align: center; padding: 16px; background: #fee2e2; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: 700; color: #dc2626;">${grupo.ausencias}</div>
+                            <div style="font-size: 12px; color: #586069;">Ausências</div>
+                        </div>
+                        <div style="text-align: center; padding: 16px; background: ${saldo >= 0 ? '#d1fae5' : '#fee2e2'}; border-radius: 8px;">
+                            <div style="font-size: 28px; font-weight: 700; color: ${saldo >= 0 ? '#059669' : '#dc2626'};">${saldoFormatado}</div>
+                            <div style="font-size: 12px; color: #586069;">Saldo</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <h4 style="margin-bottom: 12px;">Registros Individuais:</h4>
+                        ${registrosHtml}
+                    </div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(trDetalhes);
+    });
+}
 
         const trDetalhes = document.createElement('tr');
         trDetalhes.className = 'detalhes-row';
