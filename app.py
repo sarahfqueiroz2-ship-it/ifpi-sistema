@@ -2249,6 +2249,68 @@ def limpar_duplicatas():
         conn.close()
         return f"❌ Erro: {str(e)}"
 
+@app.route('/debug/registros_paulo', methods=['GET'])
+def debug_registros_paulo():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, data, tipo, quantidade, disciplina
+            FROM registros 
+            WHERE professor_nome = 'Paulo de Oliveira Gomes Filho'
+            ORDER BY data DESC
+        """)
+        
+        registros = cursor.fetchall()
+        conn.close()
+        
+        html = "<h2>Registros do Professor Paulo:</h2>"
+        html += "<table border='1' style='border-collapse: collapse;'>"
+        html += "<tr style='background:#2d8659;color:white;'><th>ID</th><th>Data</th><th>Tipo</th><th>Quantidade</th><th>Disciplina</th></tr>"
+        
+        total = 0
+        for r in registros:
+            html += f"<tr><td>{r['id']}</td><td>{r['data']}</td><td>{r['tipo']}</td><td>{r['quantidade']}</td><td>{r['disciplina']}</td></tr>"
+            total += r['quantidade']
+        
+        html += f"</table><p><strong>Total de aulas (soma):</strong> {total}</p>"
+        html += "<p><strong>Instrução:</strong> Copie o ID do registro duplicado (quantidade 4 ou 2 repetido) e execute:</p>"
+        html += "<code>https://ifpi-sistema.onrender.com/admin/remover_registro?id=ID_AQUI</code>"
+        
+        return html
+    except Exception as e:
+        return f"Erro: {str(e)}"
+
+@app.route('/admin/remover_registro', methods=['GET'])
+def remover_registro():
+    try:
+        registro_id = request.args.get('id')
+        
+        if not registro_id:
+            return "❌ Informe o ID: ?id=NUMERO"
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se existe
+        cursor.execute("SELECT id FROM registros WHERE id = %s", (registro_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return f"❌ Registro {registro_id} não encontrado!"
+        
+        # Deletar horários primeiro
+        cursor.execute("DELETE FROM registro_horarios WHERE registro_id = %s", (registro_id,))
+        # Deletar registro
+        cursor.execute("DELETE FROM registros WHERE id = %s", (registro_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return f"✅ Registro {registro_id} removido com sucesso! Recarregue a página."
+    except Exception as e:
+        return f"❌ Erro: {str(e)}"
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
