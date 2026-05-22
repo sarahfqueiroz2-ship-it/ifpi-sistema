@@ -957,6 +957,7 @@ function logout() {
         aplicarFiltros();
     }
 
+
 function gerarRelatorio() {
     const profSelecionado = document.getElementById('filtroProfessor').value;
     const dataInicial = document.getElementById('filtroDataInicial').value;
@@ -984,7 +985,7 @@ function gerarRelatorio() {
         });
     }
 
-    // REMOVER DUPLICATAS: agrupar por ID do registro
+    // REMOVER DUPLICATAS pelo ID do registro
     const registrosUnicos = new Map();
     registrosFiltrados.forEach(r => {
         if (r.id && !registrosUnicos.has(r.id)) {
@@ -1023,28 +1024,28 @@ function gerarRelatorio() {
         const grupo = gruposMap.get(chave);
         const qtd = r.quantidade || 0;
         
-        grupo.totalAulas += qtd;
-        
-        const tipo = r.tipo ? r.tipo.toLowerCase() : '';
-        
-        if (tipo === 'antecipacao' || tipo === 'antecipação') {
-            grupo.antecipadas += qtd;
-        } else if (tipo === 'reposicao' || tipo === 'reposição') {
-            grupo.reposicoes += qtd;
-        } else if (tipo === 'ausencia' || tipo === 'ausência') {
-            grupo.ausencias += qtd;
-        }
-        
-        let observacaoTexto = '';
-        if (r.observacoes && r.observacoes !== '' && r.observacoes !== 'null' && r.observacoes !== 'undefined') {
-            observacaoTexto = r.observacoes;
-        }
-        
-        // Verificar se já existe registro com a mesma data para este grupo
+        // VERIFICAR se já existe registro com a mesma data para evitar duplicata no grupo
         const dataRegistro = r.data;
-        const jaExiste = grupo.registros.some(reg => reg.data === dataRegistro && reg.tipo === r.tipo);
+        const mesmoDia = grupo.registros.some(reg => reg.data === dataRegistro);
         
-        if (!jaExiste) {
+        if (!mesmoDia) {
+            const tipo = r.tipo ? r.tipo.toLowerCase() : '';
+            
+            grupo.totalAulas += qtd;
+            
+            if (tipo === 'antecipacao' || tipo === 'antecipação') {
+                grupo.antecipadas += qtd;
+            } else if (tipo === 'reposicao' || tipo === 'reposição') {
+                grupo.reposicoes += qtd;
+            } else if (tipo === 'ausencia' || tipo === 'ausência') {
+                grupo.ausencias += qtd;
+            }
+            
+            let observacaoTexto = '';
+            if (r.observacoes && r.observacoes !== '' && r.observacoes !== 'null' && r.observacoes !== 'undefined') {
+                observacaoTexto = r.observacoes;
+            }
+            
             grupo.registros.push({
                 id: r.id,
                 data: r.data,
@@ -1164,6 +1165,12 @@ function gerarRelatorio() {
             doc.text('Registros Detalhados:', 14, startY);
             startY += 5;
             
+            // Calcular totais novamente para verificar consistência (DEBUG)
+            let totalDetalhes = 0;
+            let antecipadasDetalhes = 0;
+            let reposicoesDetalhes = 0;
+            let ausenciasDetalhes = 0;
+            
             const registrosData = grupo.registros.map(reg => {
                 let obs = reg.observacoes;
                 if (!obs || obs === '' || obs === 'null' || obs === 'undefined') {
@@ -1172,13 +1179,44 @@ function gerarRelatorio() {
                 if (obs.length > 60) {
                     obs = obs.substring(0, 57) + '...';
                 }
+                
+                const tipoFormatado = formatarTipo(reg.tipo);
+                const qtd = reg.quantidade;
+                totalDetalhes += qtd;
+                
+                if (tipoFormatado === 'Antecipação') antecipadasDetalhes += qtd;
+                else if (tipoFormatado === 'Reposição') reposicoesDetalhes += qtd;
+                else if (tipoFormatado === 'Ausência') ausenciasDetalhes += qtd;
+                
                 return [
                     formatarDataPDF(reg.data),
-                    formatarTipo(reg.tipo),
-                    reg.quantidade.toString(),
+                    tipoFormatado,
+                    qtd.toString(),
                     obs
                 ];
             });
+            
+            // VERIFICAR CONSISTÊNCIA (se houver diferença, corrigir o resumo)
+            if (grupo.totalAulas !== totalDetalhes) {
+                console.warn(`Inconsistência no grupo ${grupo.professor}: Resumo=${grupo.totalAulas}, Detalhes=${totalDetalhes}`);
+                // Corrigir resumo com os valores dos detalhes
+                grupo.totalAulas = totalDetalhes;
+                grupo.antecipadas = antecipadasDetalhes;
+                grupo.reposicoes = reposicoesDetalhes;
+                grupo.ausencias = ausenciasDetalhes;
+                const saldoCorrigido = (grupo.antecipadas + grupo.reposicoes) - grupo.ausencias;
+                
+                // Atualizar a tabela de resumo com valores corrigidos
+                doc.autoTable({
+                    body: [['Total Aulas', 'Antecipações', 'Reposições', 'Ausências', 'Saldo'],
+                           [grupo.totalAulas.toString(), grupo.antecipadas.toString(), grupo.reposicoes.toString(), grupo.ausencias.toString(), saldoCorrigido.toString()]],
+                    startY: startY - 8,
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 4, halign: 'center' },
+                    headStyles: { fillColor: [45, 134, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    margin: { left: 14, right: 14 }
+                });
+            }
             
             doc.autoTable({
                 head: [['Data', 'Tipo', 'Qtd', 'Observações']],
@@ -1219,7 +1257,6 @@ function gerarRelatorio() {
     const nomeArquivo = profSelecionado ? `relatorio_${profSelecionado.replace(/\s+/g, '_')}_${dataGeracao.replace(/\//g, '-')}.pdf` : `relatorio_todos_professores_${dataGeracao.replace(/\//g, '-')}.pdf`;
     doc.save(nomeArquivo);
 }
-
     
     // ================== INICIALIZAÇÃO ==================
     document.addEventListener('DOMContentLoaded', function() {
