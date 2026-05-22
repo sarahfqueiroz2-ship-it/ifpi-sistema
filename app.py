@@ -2202,6 +2202,34 @@ def remover_turma_fantasma():
     except Exception as e:
         return f"❌ Erro: {str(e)}"
 
+@app.route('/admin/limpar_duplicatas', methods=['GET'])
+def limpar_duplicatas():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Encontrar e remover registros duplicados (mesmo professor, mesma data, mesmo tipo)
+        cursor.execute("""
+            DELETE FROM registros WHERE id IN (
+                SELECT id FROM (
+                    SELECT id, ROW_NUMBER() OVER (
+                        PARTITION BY professor_id, data, tipo, disciplina, serie, curso_id 
+                        ORDER BY id
+                    ) as rn
+                    FROM registros
+                ) t WHERE rn > 1
+            )
+        """)
+        
+        conn.commit()
+        removidos = cursor.rowcount
+        conn.close()
+        
+        return f"✅ {removidos} registros duplicados removidos!"
+    except Exception as e:
+        return f"❌ Erro: {str(e)}"
+
+
 # ================== INICIALIZAÇÃO ==================
 
 if __name__ == '__main__':
