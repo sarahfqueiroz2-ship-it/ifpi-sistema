@@ -2208,27 +2208,46 @@ def limpar_duplicatas():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Encontrar e remover registros duplicados (mesmo professor, mesma data, mesmo tipo)
+        # Primeiro, encontrar os IDs duplicados
         cursor.execute("""
-            DELETE FROM registros WHERE id IN (
-                SELECT id FROM (
-                    SELECT id, ROW_NUMBER() OVER (
-                        PARTITION BY professor_id, data, tipo, disciplina, serie, curso_id 
-                        ORDER BY id
-                    ) as rn
-                    FROM registros
-                ) t WHERE rn > 1
-            )
+            SELECT id FROM (
+                SELECT id, ROW_NUMBER() OVER (
+                    PARTITION BY professor_id, data, tipo, disciplina, serie, curso_id 
+                    ORDER BY id
+                ) as rn
+                FROM registros
+            ) t WHERE rn > 1
+        """)
+        
+        duplicados = cursor.fetchall()
+        ids_duplicados = [str(d['id']) for d in duplicados]
+        
+        if not ids_duplicados:
+            conn.close()
+            return "ℹ️ Nenhum registro duplicado encontrado."
+        
+        # Deletar os horários relacionados aos registros duplicados
+        cursor.execute(f"""
+            DELETE FROM registro_horarios 
+            WHERE registro_id IN ({','.join(ids_duplicados)})
+        """)
+        
+        # Deletar os registros duplicados
+        cursor.execute(f"""
+            DELETE FROM registros 
+            WHERE id IN ({','.join(ids_duplicados)})
         """)
         
         conn.commit()
         removidos = cursor.rowcount
         conn.close()
         
-        return f"✅ {removidos} registros duplicados removidos!"
+        return f"✅ {removidos} registros duplicados removidos (e seus horários relacionados)!"
+        
     except Exception as e:
+        conn.rollback()
+        conn.close()
         return f"❌ Erro: {str(e)}"
-
 
 # ================== INICIALIZAÇÃO ==================
 
